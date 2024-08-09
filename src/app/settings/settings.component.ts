@@ -9,4 +9,6 @@ import { Component } from '@angular/core';
 })
 export class SettingsComponent {
 
+  // TODO IMPLEMENT PROFILE PICTURE BUBBLE, AND CLICK IT TO CHANGE PROFILE PIC .
+
 }
