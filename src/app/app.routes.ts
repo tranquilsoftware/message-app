@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
+import { NgModule } from '@angular/core';
 
 // Page Components
 import { LoginComponent } from "./login/login.component";
@@ -22,8 +23,14 @@ export const routes: Routes = [
   { path: 'dashboard',  component: DashboardComponent },
 
   // chat room (id - id of user we are communicating with)
-  { path: 'chat/:id',   redirectTo: 'chat/:id',   component: ChatRoomComponent },
+  { path: 'chat/:id',   component: ChatRoomComponent },
 
   // Error handling (Error 404 reroute):
   { path: '**',         redirectTo: '/dashboard' } // if user is no longer signed in, dashboard will redirect to the login component.
 ];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }

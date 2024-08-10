@@ -6,7 +6,7 @@ import {  CommonModule } from "@angular/common";
 import {  FormsModule } from "@angular/forms";
 
 // for notifications (lightweight framework)
-import toastr from 'toastr';
+// import * as toastr from 'toastr';
 
 // Important relevant members
 import { AuthenticationService } from '../services/authentication.service';
@@ -40,13 +40,16 @@ export class LoginComponent {
           //   and set our localised loggedIn boolean to true.
           this.router.navigate(['/dashboard']).then(r => this.m_isLoggedIn = true);
         } else {
-          toastr.error('Login failed. You have likely entered the wrong credentials', 'Try again');
+          // toastr.error('Login failed. You have likely entered the wrong credentials', 'Try again');
+          console.error('Login failed!');
+
         }
 
 
       },
       error: (err) => {
-        toastr.error('Oh dear, something bad happened. You broke something.', 'Error');
+        // toastr.error('Oh dear, something bad happened. You broke something.', 'Error');
+        console.error('Oh dear. Error!');
       }
     });
   }
