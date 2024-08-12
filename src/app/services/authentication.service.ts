@@ -1,45 +1,68 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, BehaviorSubject } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
+
+export interface AuthResponse {
+  token: string;
+  expiresIn: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  private apiUrl = 'http://localhost:4200/api';
+  private apiUrl = 'http://localhost:5000/api/login';
+  private authStatusSubject = new BehaviorSubject<boolean>(this.isLoggedIn());
+  public authStatus$ = this.authStatusSubject.asObservable();
 
   constructor(private http: HttpClient) { }
 
-  login(username: string, password: string): Observable<boolean> {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, { username, password })
+  login(username: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(this.apiUrl, { username, password })
       .pipe(
         tap(response => this.setSession(response)),
-        map(response => !!response.token), // Convert to boolean based on token presence
-        catchError(this.handleError<boolean>('login', false))
+        // map(response => !!response.token),
+        catchError(this.handleError<AuthResponse>('login'))
       );
   }
 
-  private setSession(authResult : {token: string}) {
-    localStorage.setItem('id_token', authResult.token);
+  private setSession(authResult: AuthResponse): void {
+    const expiresAt = new Date().getTime() + authResult.expiresIn * 1000;
+    localStorage.setItem('auth_token', authResult.token);
+    localStorage.setItem('expires_at', JSON.stringify(expiresAt));
+    this.authStatusSubject.next(true);
   }
 
   logout() {
-    localStorage.removeItem('id_token');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('expires_at');
+    this.authStatusSubject.next(false);
   }
 
-  isLoggedIn() {
-    // return result of if id token exists in local storage
-    //  e.g. (id_token = 'xxxx' = returns True),
-    //       (id_token =  NULL = returns False)
-    return !!localStorage.getItem('id_token');
+  isLoggedIn(): boolean {
+    const expiresAt = JSON.parse(localStorage.getItem('expires_at') || '0');
+    return new Date().getTime() < expiresAt && !!localStorage.getItem('auth_token');
   }
 
-  // Handle template error. Simply prints any error that comes to us to the web browsers console
+  getToken(): string | null {
+    return localStorage.getItem('auth_token');
+  }
+
+  public setAuthToken(token: string): void {
+    localStorage.setItem('auth_token', token);
+    this.authStatusSubject.next(true);
+  }
+
   private handleError<T>(operation = 'operation', result?: T) {
-    return (anError: any): Observable<T> => {
-      console.error(anError); // print error to developer console
+    return (error: HttpErrorResponse): Observable<T> => {
+      console.error(`${operation} failed: ${error.message}`);
       return of(result as T);
     };
   }
+
+
+
 }
+
+

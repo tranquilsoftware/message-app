@@ -1,16 +1,9 @@
-import { Component } from '@angular/core';
-import {Router} from "@angular/router";
-
-// For login form UI
-import {  CommonModule } from "@angular/common";
-import {  FormsModule } from "@angular/forms";
-
-// for notifications (lightweight framework)
-// import * as toastr from 'toastr';
-
-// Important relevant members
-import { AuthenticationService } from '../services/authentication.service';
-
+import { Component, OnInit } from '@angular/core';
+import { Router, NavigationStart, NavigationEnd, NavigationError } from "@angular/router";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import * as toastr from "toastr";
+import { AuthenticationService, AuthResponse } from '../services/authentication.service';
 
 @Component({
   selector: 'app-login',
@@ -19,38 +12,67 @@ import { AuthenticationService } from '../services/authentication.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-
-export class LoginComponent {
-
-  // Define login parameters to empty strings first.
+export class LoginComponent implements OnInit {
   m_username: string = '';
   m_password: string = '';
-  m_isLoggedIn = false;
 
-  constructor(private authService : AuthenticationService, private router : Router) {
-    // ... add to constructor as we need
+  constructor(private authService: AuthenticationService, private router: Router) {
+    // Subscribe to router events for debugging
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        console.log('Navigation started:', event.url);
+      }
+      if (event instanceof NavigationEnd) {
+        console.log('Navigation ended:', event.url);
+      }
+      if (event instanceof NavigationError) {
+        console.log('Navigation error:', event.error);
+      }
+    });
+  }
+
+  ngOnInit() {
+    // Check if user is already logged in
+    if (this.authService.isLoggedIn()) {
+      console.log('User is already logged in. Navigating to dashboard.');
+      this.navigateToDashboard();
+    }
   }
 
   onSubmit() {
-    this.authService.login(
-      this.m_username, this.m_password).subscribe({
-      next: (onSuccess) => {
-        if (onSuccess) {
-          // If we successfully login, tell the webpage to navigate to Dashboard.
-          //   and set our localised loggedIn boolean to true.
-          this.router.navigate(['/dashboard']).then(r => this.m_isLoggedIn = true);
+    console.log('Login attempt for user:', this.m_username);
+
+    // begin login with authentication service
+    this.authService.login(this.m_username, this.m_password).subscribe({
+      next: (response: AuthResponse) => {
+        console.log('Login response:', response);
+        if (response && response.token) {
+          console.log('Login successful, attempting navigation to dashboard');
+          this.authService.setAuthToken(response.token);
+          this.navigateToDashboard();
         } else {
-          // toastr.error('Login failed. You have likely entered the wrong credentials', 'Try again');
-          console.error('Login failed!');
-
+          console.log('Login unsuccessful');
+          toastr.error('Login failed. You have likely entered the wrong credentials', 'Try again');
         }
-
-
       },
       error: (err) => {
-        // toastr.error('Oh dear, something bad happened. You broke something.', 'Error');
-        console.error('Oh dear. Error!');
+        console.error('Login error:', err);
+        toastr.error('Oh dear, something bad happened. You broke something.', 'Error');
       }
+    });
+  }
+
+  private navigateToDashboard() {
+    this.router.navigate(['/dashboard']).then((success) => {
+      console.log('Navigation result:', success);
+      if (success) {
+        toastr.success('You have logged in successfully.');
+      } else {
+        toastr.error('Navigation failed');
+      }
+    }).catch(err => {
+      console.error('Navigation error:', err);
+      toastr.error('Navigation to dashboard failed.', 'Error');
     });
   }
 }

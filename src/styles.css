@@ -7,6 +7,8 @@ body {
   align-items: center;
   min-height: 100vh;
   background-color: #f0f2f5;
+
+  line-height: 1.6;
 }
 
 .container {
@@ -42,4 +44,10 @@ button {
 
 button:hover {
   background-color: #166fe5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import * as toastr from "toastr";
 
 @Component({
   selector: 'app-root',
@@ -16,7 +16,6 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // go to login page on page lyaod
-    this.router.navigate(['/login']);
+
   }
 }

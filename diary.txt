@@ -1,0 +1,11 @@
+
+
+11/08
+
+realised db not working cause im not typing in TERMINAL
+
+  node server.js
+
+MANUALLY RUN FIRST THEN IT CAN SUCCESSFULLY RUN CORS REQUESTS.
+
+12/08 Dashboard now opening correctly! Time to start developing dashboard..
