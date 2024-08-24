@@ -1,9 +1,10 @@
 <!--<p>login works!</p>-->
 <div class="login-container">
-  <h2>Login</h2>
+  <h1>Login</h1>
   <form (ngSubmit)="onSubmit()">
     <input type="text" [(ngModel)]="m_username" name="username" required>
     <input type="password" [(ngModel)]="m_password" name="password" required>
     <button type="submit">Login</button>
+    <button type="register">Register</button>
   </form>
 </div>

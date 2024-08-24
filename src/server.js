@@ -2,15 +2,12 @@ const express = require('express');  // Server
 const mongoose = require('mongoose');  // For requesting information from MongoDB
 const bodyParser = require('body-parser');
 const cors = require('cors');  // for security during requests
-const setAuthToken = require('../src/app/services/authentication.service');
 const jwt = require('jsonwebtoken');  // For generating and verifying JWT tokens
 
-const { generateToken } = require('../src/app/services/authUtils'); // for mkaing JWT Tokens.
-const { SECRET_KEY } = require('../src/app/services/authUtils');
+const { generateToken, SECRET_KEY } = require('../src/app/services/authUtils'); // for mkaing JWT Tokens.
 
 const User = require('./models/User');
-// Define Express app
-const app = express();
+const app = express(); // Define Express app
 
 // attach body parser and cors to express app
 app.use(bodyParser.json());
@@ -23,13 +20,23 @@ app.use(cors({
 }));
 
 
-// Hardcoded user for testing (obviously remove when building production/deploying)
-const HARDCODED_USER = {
-  username: 'qwe',
-  password: '123' // Note: Passwords should be hashed in production!
-};
-
 app.options('*', cors()); // Allow all preflight requests
+
+
+// Before anything! do the following important things...
+// Middleware to authenticate JWT token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
 
 
 // define login routing
@@ -44,13 +51,6 @@ app.post('/api/login', async(req, res) => {
     if (!user) {
       console.log('User not found (probably doesn\'t exist');
 
-      // Check against hardcoded user (for testing purposes only)
-      if (username === HARDCODED_USER.username && password === HARDCODED_USER.password) {
-        // Generate JWT token for hardcoded user
-        const token = generateToken({ username: HARDCODED_USER.username });
-        return res.json({ token });
-      }
-
       return res.status(401).json({ message: 'Invalid credentials' });
     } else {
       console.log('Valid user. (exists)');
@@ -61,32 +61,89 @@ app.post('/api/login', async(req, res) => {
     const name = user.getUsername();
 
     if (isMatch) {
-      // console.log('Successfully logged in! User:', user.username);
+      console.log('Successfully logged in! User:', name);
 
       // Generate JWT token for valid user
-      const token = generateToken({ username: HARDCODED_USER.username });
+      const token = generateToken({ username: name });
       return res.json({ token });
     } else {
       res.status(401).json({message: 'Invalid credentials' });
     }
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({message: 'Server error. Contact Admin, and remain concerned.'});
   }
 });
 
-// Middleware to authenticate JWT token
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// USER SETTINGS..
 
-  if (token == null) return res.sendStatus(401);
+// get user settings..
+app.get(`${this.apiUrl}/user/settings`, authenticateToken, async(req, res) => {
+  try {
+    const user = await User.findOne({ username }).exec();
 
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
+    // EXIT ON INVALID USER
+    if (!user) {
+      return res.status(404).json({ message: "The user doesn't exist! Quit hacking around.." });
+    }
+    res.json({
+      name:           user.username,
+      email:          user.email,
+      profile_pic:    user.profile_pic,
+      dark_mode:      user.dark_mode,
+      notifications:  user.notifications
+    });
+
+  } catch (error) {
+    res.status(500).json({message: 'Server error. Contact Admin, and remain concerned.'});
+  }
+} );
+
+// Update a user's setting..
+app.put('api/user/settings/:setting', authenticateToken, async(req, res) => {
+  // declare request
+  const { setting } = req.params;
+  const { value } = req.body;
+
+  // try updating the users stting
+  try {
+    const user = await User.findOne({ username: req.user.username});
+
+    // EXIT ON INVALID USER..
+    if (!user) {
+      return res.status(404).json({ message: 'User not found!' });
+    }
+    user[setting] = value;
+    await user.save();
+    res.json({ message: 'Setting was updated successfully! '});
+  } catch (error) {
+    res.status(500).json({ messagae: 'Server error, '})
+  }
+});
+
+// Upload the user's profile picture..
+app.post('/api/user/profile-picture', authenticateToken, async (req, res) => {
+  // Implement file upload logic here
+  try {
+    const user = await User.findOne({ username: req.user.username });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    // user.profilePicture = 'localhost:4200/img/default_user.png';
+    await user.save();
+    res.json({ url: user.profilePicture });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+
+
+
+
+// OTHERS..
+
 
 // Protected route example
 app.get('/api/dashboard', authenticateToken, (req, res) => {
@@ -102,22 +159,6 @@ mongoose.connect(mongoDBPath,  {
 })
   .then(async () => {
     console.log('MongoDB successfully connected!');
-
-    //
-    // // // TEST REMOVE ALL DB AND MANUALLY ADD!!!!! HARDCODE TODO WARNING
-    // await User.deleteMany({}); //clear for test
-    //
-    // const users = [
-    //   {
-    //     username: 'super',
-    //     password: '123',
-    //     roles: ['super'],
-    //     groups: []
-    //   },
-    // ];
-    //
-    // await User.insertMany(users);
-    // console.log('Users added successfully');
 
   })
   .catch(error => console.error('MongoDB did NOT connect succesfully. Error: ', error));

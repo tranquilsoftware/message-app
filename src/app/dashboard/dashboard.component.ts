@@ -1,42 +1,134 @@
-import { Component, OnInit } from '@angular/core';
-import {CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import {CommonModule, NgFor, NgIf} from '@angular/common';
 import {Router} from "@angular/router";
 import * as toastr from "toastr";
+import { AuthenticationService } from "../services/authentication.service";
+import {Observable } from "rxjs";
+import {map} from "rxjs/operators";
+import { SettingsComponent } from '../settings/settings.component'
 
+interface Message { // Structure for a message
+  chat_id:      number;  // Chat-room ID
+  name:         string;  // Name of person
+  avatar:       string;  // String URL to the profile pic
+  last_msg:     string;  // The string of the users last sent msg
+  time:         string;  // Time of last sent msg
+
+  unread?:      number;  // Number of unread messages...
+  online?:      boolean; // Display green/red circle, indicating if person is online.. (socket.io later?)
+}
+
+
+
+//   templateUrl: './dashboard.component.html',
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  imports: [CommonModule, NgFor, NgIf],
+  styleUrls: ['./dashboard.component.css'],
+  template: `
+    <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
+      <div class="dashboard-container">
+        <div class="dashboard-content">
+          <header>
+            <h1>Messages</h1>
+          </header>
+
+          <ul class="message-list">
+            <li *ngFor="let message of messages" (click)="openChat(message.chat_id)" class="message-item">
+              <div class="avatar-container">
+                <img [src]="message.avatar" [alt]="message.name" class="avatar">
+                <span *ngIf="message.online" class="online-indicator"></span>
+              </div>
+              <div class="message-content">
+                <h3>{{ message.name }}</h3>
+                <p>{{ message.last_msg }}</p>
+              </div>
+              <div class="message-meta">
+                <span *ngIf="message.unread" class="unread-badge">{{ message.unread }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <nav class="bottom-nav">
+          <button class="active">Messages</button>
+          <button (click)="goToSettings()">Settings</button>
+          <button (click)="authenticationService.logout()">Logout</button>
+        </nav>
+      </div>
+    </ng-container>
+
+    <ng-template #notAuthenticated>
+      <div class="not-authenticated">
+        <h2>You are not logged in! (Or something went wrong with authentication)</h2>
+        <p>Please logout and try to login again!</p>
+        <button (click)="authenticationService.logout()">Logout</button>
+      </div>
+    </ng-template>
+  `
 })
-
 export class DashboardComponent implements OnInit {
-  currentDate: string = '';
-  currentTime: string = '';
+  messages: Message[] = [];  // Init array
+  isAuthenticated$: Observable<boolean> = new Observable<boolean>();
+  constructor(private router: Router, public authenticationService: AuthenticationService) {
 
-  constructor(private router: Router) {
-    console.log('DashboardComponent constructor called');
   }
 
-  ngOnInit() {
-    console.log('DashboardComponent ngOnInit called');
-    const authToken = localStorage.getItem('auth_token');
+  ngOnInit(): void {
+    this.isAuthenticated$ = this.authenticationService.isAuthenticated().pipe(
+      map(isAuthenticated => {
 
-    if (!authToken) {
-      console.log('No auth token found, redirecting to login');
-      this.router.navigate(['/login']).then(r => {
-        toastr.error('No auth token found. Redirecting to login page.');
-      });
-    } else {
-      console.log('Auth token found, initializing dashboard');
-      this.initializeDashboard();
-    }
+        // Is logged in logic... We pipe it to avoid any memory leaks (for production)
+        if (isAuthenticated) {
+          this.loadMessages();
+        }
+
+      return isAuthenticated;
+    })
+    )
+
+    this.loadMessages();
   }
 
-  initializeDashboard() {
-    console.log('Initializing dashboard');
+  // initializeDashboard() {
+  //   console.log('Initializing dashboard');
+  // }
+
+
+  openChat(messageId: number): void {
+    // Go to /chat-[id number]
+    console.log(`Opening chat for message ID: ${messageId}`);
   }
 
+  loadMessages() {
+    // TODO IMPLEMENT AS MONGODB REQUEST/POST SERVICE ETC.
 
+    // HARD CODE FOR FIRST TIME,
+    this.messages = [
+      {
+        chat_id: 1,
+        name: 'Jeff',
+        avatar: '../../img/i.jpg',
+        last_msg: 'Hello World',
+        time: '5 min',
+        unread: 5,
+        online: true
+      },
+      {
+        chat_id: 2,
+        name: 'Charlie',
+        avatar: '../../img/i.jpg',
+        last_msg: "hello",
+        time: '15 min',
+        unread: 0,
+        online: false
+      },
+
+    ];
+  }
+
+  goToSettings(): void {
+    this.router.navigate(['/settings']);
+  }
 }

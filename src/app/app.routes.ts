@@ -8,29 +8,30 @@ import { AdminPanelComponent} from "./admin-panel/admin-panel.component";
 import { SettingsComponent } from "./settings/settings.component";
 import { DashboardComponent } from "./dashboard/dashboard.component"
 
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
+// AuthGuard (for login token logic)
+import { authGuard } from './services/auth.guard';
+import {AuthenticationService} from "./services/authentication.service";
 
-// Define URL Routing
-export const routes: Routes = [
-
+export const routes: Routes = [ // Define URL Routing
 
   //   e.g. going to 'localhost:xxxx' automatically redirects to 'localhost:xxxx/dashboard'. :)
   { path: '',           redirectTo: '/dashboard',     pathMatch: 'full' },
 
   // Define other component & correlated url paths
   { path: 'login',      component: LoginComponent },
-  { path: 'admin',      component: AdminPanelComponent },
-  { path: 'settings',   component: SettingsComponent },
-  { path: 'dashboard',  component: DashboardComponent }, // if user is no longer signed in, dashboard will redirect to the login component.
+  { path: 'admin',      component: AdminPanelComponent, canActivate: [authGuard] },
+  { path: 'settings',   component: SettingsComponent, canActivate: [authGuard] },
+  { path: 'dashboard',  component: DashboardComponent, canActivate: [authGuard] }, // if user is no longer signed in, dashboard will redirect to the login component.
 
   // chat room (id - id of user we are communicating with)
-  { path: 'chat/:id',   component: ChatRoomComponent },
+  { path: 'chat/:id',   component: ChatRoomComponent, canActivate: [authGuard] },
 
   // Error handling (Error 404 reroute):
-  { path: '',           redirectTo: '/dashboard',     pathMatch: 'full' },
+  { path: '**',           redirectTo: '/login',     pathMatch: 'full' },
 ];
 
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
 export class AppRoutingModule { }

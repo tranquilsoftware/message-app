@@ -9,3 +9,5 @@ realised db not working cause im not typing in TERMINAL
 MANUALLY RUN FIRST THEN IT CAN SUCCESSFULLY RUN CORS REQUESTS.
 
 12/08 Dashboard now opening correctly! Time to start developing dashboard..
+
+if logged in, and go to /login. it routes to /... NOTHING , review routing...

@@ -5,21 +5,44 @@ const Schema = mongoose.Schema;
 // define our user schema model
 const userSchema = new Schema({
   username: {
-    type: String,
+    type:     String,
     required: true,
-    unique: true
+    unique:   true
   },
 
   password: {
-    type: String,  // For testing obviously, passwords should be hashed in production
+    type:     String,  // For testing obviously, passwords should be hashed in production
     required: true,
   },
 
-  // email maybe, probably not at this stage.
+  email: {
+    type:     String,
+    required: false,  // For testing purposes, we dont require a email for account setup
+    unique:   true
+  },
+
+  profile_pic: {  // Path to profile picture on web server
+    type:     String,
+    required: false,
+    default:  './img/default_user.png' // todo check that this address is pathed correctly.
+  },
+
+  dark_mode: {
+    type:     Boolean,
+    required: false,
+    default:  false
+  },  // TODO: implement dark mode (changes to css styling)
+
+  notifications: {
+    type:     Boolean,
+    required: false,
+    default:  true
+  }, // todo: this is a placeholder for notifications to  be sent the the user, in some form of wahy.;
+
 
   roles: [{
     type: String,
-    enum: ['super', 'user'],  // Group-Admin isnt initilized here, it is given group-admin from what the group channels backend ADMIN is.
+    enum: ['super', 'group-admin', 'user'],  // Group-Admin isnt initilized here, it is given group-admin from what the group channels backend ADMIN is.
   }],
 
   groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],

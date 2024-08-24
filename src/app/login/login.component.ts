@@ -4,6 +4,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import * as toastr from "toastr";
 import { AuthenticationService, AuthResponse } from '../services/authentication.service';
+import {SettingsService} from "../settings.service";
 
 @Component({
   selector: 'app-login',
@@ -16,24 +17,14 @@ export class LoginComponent implements OnInit {
   m_username: string = '';
   m_password: string = '';
 
-  constructor(private authService: AuthenticationService, private router: Router) {
-    // Subscribe to router events for debugging
-    this.router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        console.log('Navigation started:', event.url);
-      }
-      if (event instanceof NavigationEnd) {
-        console.log('Navigation ended:', event.url);
-      }
-      if (event instanceof NavigationError) {
-        console.log('Navigation error:', event.error);
-      }
-    });
-  }
+  constructor(
+    private authService: AuthenticationService,
+    private router: Router,
+    private settingsService: SettingsService) { }
 
   ngOnInit() {
     // Check if user is already logged in
-    if (this.authService.isLoggedIn()) {
+    if (this.authService.isAuthenticated()) {
       console.log('User is already logged in. Navigating to dashboard.');
       this.navigateToDashboard();
     }
@@ -64,15 +55,17 @@ export class LoginComponent implements OnInit {
 
   private navigateToDashboard() {
     this.router.navigate(['/dashboard']).then((success) => {
-      console.log('Navigation result:', success);
-      if (success) {
+      if (success && this.settingsService.showDebugLogs) {
         toastr.success('You have logged in successfully.');
-      } else {
+      } else if (this.settingsService.showDebugLogs) {
         toastr.error('Navigation failed');
       }
+      console.log('Navigation result:', success);
+
     }).catch(err => {
       console.error('Navigation error:', err);
       toastr.error('Navigation to dashboard failed.', 'Error');
     });
+
   }
 }
