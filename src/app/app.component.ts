@@ -17,7 +17,12 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthenticationService,
-    private settingsService: SettingsService) { }
+    private settingsService: SettingsService,
+    // private socket: Socket
+  )
+  {
+
+  }
 
   ngOnInit(): void {
     console.log('\nTrying to read token.');
@@ -31,6 +36,7 @@ export class AppComponent implements OnInit {
       this.router.navigate(['/dashboard']).then(
         ()=> console.log('Token Valid!'));
     }
-
   }
+
+
 }

@@ -11,3 +11,78 @@ MANUALLY RUN FIRST THEN IT CAN SUCCESSFULLY RUN CORS REQUESTS.
 12/08 Dashboard now opening correctly! Time to start developing dashboard..
 
 if logged in, and go to /login. it routes to /... NOTHING , review routing...
+
+
+24/08
+
+registering logs in correctly with token
+
+but logging in does not log in , and go to dashboard..
+
+  - suspected issues with bcrypt comparing passwords i am assuming
+
+  - also noticed when we register a usr, we should automatically assume they are user by default, (we are not setting anything rn)
+
+.. fixed bcrypt ! had old code trying to request the password from the db (thinking its stored in raw data format)..
+
+working great, registration works flawlessly, login works flawlessly.
+
+
+29/08
+
+After a long night of debugging. It was found that the culprit of the BUG that didnt update the MongoDB User's settings
+
+WAS BECAUSE THERE WAS A EXTRA / FRONT SLASH BEHIND THE API URL!!!!
+
+I caught the bug when i implemented the following function into Server.js to handle unhandled requests (print them)
+
+    app.use((req, res, next) => {
+      console.log(`Unhandled request: ${req.method} ${req.url}`);
+      next();
+    });
+
+    todo: fix uploading pp
+          implement sockets to chat... upload message to Messages, with group room id etc
+
+
+
+Error getting: Header Request GET ws://localhost:5000/socket.io/?EIO=4&transport=websocket
+
+Navigated to chat room. navigation.service.ts:26:12
+Waterfox can’t establish a connection to the server at ws://localhost:5000/socket.io/?EIO=4&transport=websocket. websocket.js:35:102
+Socket connection error: Error: websocket error
+
+FIXED.
+
+i declare io like:
+
+    const io = require('socket.io')(server, {
+      pingTimeout: 5000, // 5 secs
+      cors: {
+        origin: "http://localhost:5000",
+        methods: ["GET", "POST"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
+      }
+    });
+
+ which solved the fucking socket bug! (no help from stackoverflow this time)
+
+(socket) Message received: {
+  _id: '',
+  chatRoomId: '1',
+  senderId: { _id: '', username: '', profile_pic: './img/default_user.png' },
+  userId: '66c9a69c1e190c5e1af17d5d',
+  msgContent: '////////////',
+  timestamp: '2024-08-29T13:16:15.660Z',
+  read: false
+}
+
+
+sockets receiving messages, Now....
+ todo:
+    save a message model every new message,
+    On chatboard initiailization, load previous existing messages, etc.
+    on new-message it should populate to all other clients on the server/chat room
+whats working:
+  socket recognises when: a user joins a server, recognises message received.

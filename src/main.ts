@@ -7,12 +7,9 @@ import {provideHttpClient} from "@angular/common/http";
 const appConfig = {
   providers: [
     provideRouter(routes), // ROUTING CONFIG ATTACHED.
-    provideHttpClient() // IMPORTANT TO RUN
+    provideHttpClient() // PROVIDE HTTP CLIENT. IMPORTANT
   ],
 };
 
 bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));
-
-// platformBrowserDynamic().bootstrapModule(AppModule)
-//   .catch(err => console.error(err));

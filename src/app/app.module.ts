@@ -10,22 +10,37 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import {SettingsComponent} from "./settings/settings.component";
 import {AdminPanelComponent} from "./admin-panel/admin-panel.component";
 import {ChatRoomComponent} from "./chat-room/chat-room.component";
+import {HTTP_INTERCEPTORS} from "@angular/common/http";
+import {AuthInterceptor} from "./services/auth.interceptor";
+
+import { SocketIoModule, SocketIoConfig } from "ngx-socket-io";
+import {SocketService} from "./services/socket.service";
+
+const config: SocketIoConfig = {
+  url: 'http://localhost:5000',
+  options: {
+    autoConnect: true
+  }
+};
+
 // Import other components as needed
 
 @NgModule({
   declarations: [],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(routes),
+    RouterModule.forRoot(routes),  AppRoutingModule, // setup routing..
     AppComponent,
     LoginComponent,
     DashboardComponent,
     SettingsComponent,
     AdminPanelComponent,
     ChatRoomComponent,
+    SocketIoModule.forRoot(config) // setup socket
+    // SocketIoModule.forRoot({url: 'http://localhost:5000'}) // setup socket
   ],
 
-  providers: [],
+  providers: [{SocketService, provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true}, ],
   bootstrap: []
 })
 export class AppModule { }

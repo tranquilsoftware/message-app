@@ -5,6 +5,7 @@ import { FormsModule } from "@angular/forms";
 import * as toastr from "toastr";
 import { AuthenticationService, AuthResponse } from '../services/authentication.service';
 import {SettingsService} from "../settings.service";
+import {NavigationService} from "../services/navigation.service";
 
 @Component({
   selector: 'app-login',
@@ -19,15 +20,20 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private authService: AuthenticationService,
-    private router: Router,
-    private settingsService: SettingsService) { }
+    private navigationService: NavigationService,
+    // private settingsService: SettingsService
+  ) { }
 
   ngOnInit() {
     // Check if user is already logged in
-    if (this.authService.isAuthenticated()) {
-      console.log('User is already logged in. Navigating to dashboard.');
-      this.navigateToDashboard();
-    }
+    this.authService.isAuthenticated().subscribe(isAuthenticated => {
+      if (isAuthenticated) {
+        console.log('User is already logged in. Navigating to dashboard.');
+        this.navigationService.navigateToDashboard();
+      } else {
+        console.log('User not logged in. Staying on login page.');
+      }
+    });
   }
 
   onSubmit() {
@@ -37,14 +43,19 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.m_username, this.m_password).subscribe({
       next: (response: AuthResponse) => {
         console.log('Login response:', response);
+
         if (response && response.token) {
           console.log('Login successful, attempting navigation to dashboard');
           this.authService.setAuthToken(response.token);
-          this.navigateToDashboard();
-        } else {
-          console.log('Login unsuccessful');
+          this.navigationService.navigateToDashboard();
+        } else if (!response) {
+          console.log('Login unsuccessful, bad response');
           toastr.error('Login failed. You have likely entered the wrong credentials', 'Try again');
+
+        } else if (!response.token) {
+          console.log('Token unsuccessful');
         }
+
       },
       error: (err) => {
         console.error('Login error:', err);
@@ -53,19 +64,8 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  private navigateToDashboard() {
-    this.router.navigate(['/dashboard']).then((success) => {
-      if (success && this.settingsService.showDebugLogs) {
-        toastr.success('You have logged in successfully.');
-      } else if (this.settingsService.showDebugLogs) {
-        toastr.error('Navigation failed');
-      }
-      console.log('Navigation result:', success);
-
-    }).catch(err => {
-      console.error('Navigation error:', err);
-      toastr.error('Navigation to dashboard failed.', 'Error');
-    });
-
+  onRegister() : void { // register text click
+    this.navigationService.navigateToRegisterUser();
   }
+
 }

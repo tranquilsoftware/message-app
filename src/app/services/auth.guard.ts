@@ -8,14 +8,6 @@ export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthenticationService);
   const router = inject(Router);
 
-  // // Check if the user is authenticated
-  // if (authService.isAuthenticated()/* && !authService.isTokenExpired()*/) {
-  //   return true; // User is authenticated, allow access
-  // } else {
-  //   // Redirect to login page if not authenticated
-  //   router.navigate(['/login']).then(r => console.log('Going to login!'));
-  //   return false; // User is not authenticated, deny access
-  // }
   return authService.isAuthenticated().pipe(
     map(isAuthenticated => {
       if (isAuthenticated) {
@@ -26,4 +18,5 @@ export const authGuard: CanActivateFn = (route, state) => {
       }
     })
   );
+
 };

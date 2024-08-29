@@ -1,17 +1,20 @@
 const jwt = require('jsonwebtoken');
 
-// Secret key for JWT signing and verification
-const SECRET_KEY = 'secret'; // TODO UPDATE , use environment variable for most secure in OS. (WONT WORK ON LECTURER PC)
+//TODO UPDATE , use environment variable for most secure in OS. (although it, WONT WORK ON LECTURER PC)
+const SECRET_KEY = process.env.SECRET_KEY || 'secret'; // Use a default for local development
 
-/**
- * Generates a JWT token.
- * @param {Object} payload - The payload to encode in the token.
- * @param {string} [secret=SECRET_KEY] - The secret key for signing the token.
- * @param {string} [expiresIn='1h'] - The token expiration time.
- * @returns {string} The generated token.
- */
-const generateToken = (payload, secret = SECRET_KEY, expiresIn = '1h') => {
-  return jwt.sign(payload, secret, { expiresIn });
+// This class is only used to get tokens (using jwt)
+
+
+const generateToken = (payload) => {
+  // console.log('GENERATING TOKEN WITH KEY: [', SECRET_KEY, ']');
+
+  if (!payload) {
+    throw new Error('Payload is required for token generation');
+  }
+
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: '1800s' });
 };
+
 
 module.exports = { generateToken };

@@ -9,9 +9,11 @@ header {
   /*background-color: white;*/
   color: #1877f2;
   padding: 1rem;
+  text-align: center;
+
 }
 
-h1 {
+h1 h2 p {
   margin: 0;
   font-size: 1.5rem;
   text-align: center;
@@ -88,6 +90,13 @@ main {
   opacity: 0;
   width: 0;
   height: 0;
+}
+
+.date {
+  position: relative;
+  display: inline-block;
+  width: 128px;
+  height: 24px;
 }
 
 .slider {

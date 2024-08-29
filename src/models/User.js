@@ -15,6 +15,11 @@ const userSchema = new Schema({
     required: true,
   },
 
+  birthdate: {
+    type:     String,
+    required: false, // not required by default
+  },
+
   email: {
     type:     String,
     required: false,  // For testing purposes, we dont require a email for account setup
@@ -63,17 +68,16 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare passwords WITH BCRYPT
-// userSchema.methods.comparePassword = async function(candidatePassword) {
-//   return await bcrypt.compare(candidatePassword, this.password);
-// };
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
-
-// for comparing WITHOUT bcrypt // for testing development
-userSchema.methods.comparePassword = async function(parameterizedPass) {
-  let m_result = parameterizedPass === this.password;
-  console.log('login result:', m_result);
-  return m_result;
-}
+// // for comparing WITHOUT bcrypt // for testing development (raw string passowrds) like super, 123
+// userSchema.methods.comparePassword = async function(parameterizedPass) {
+//   let m_result = parameterizedPass === this.password;
+//   console.log('login result:', m_result);
+//   return m_result;
+// }
 
 userSchema.methods.getUsername = function() {
   return this.username;
