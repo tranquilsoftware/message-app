@@ -116,21 +116,11 @@ export class SettingsComponent implements OnInit {
     this.authService.updateUserSetting(setting, value).subscribe(
       () => {
         console.log(`${setting} updated successfully!`);
-        // Optionally, you can show a success message to the user here
       },
       error => {
         console.error(`Error updating ${setting}, used value: ${value}:`, error);
         // Show an error message to the user
         alert(`Failed to update ${setting}. Please try again later.`);
-
-
-        // if (typeof value === 'boolean' && typeof this.user[setting as keyof UserSettings] === 'boolean') {
-        //   this.user[setting as keyof UserSettings] = !value;
-        // } else {
-        //   console.error('Reverting value is not possible due to type mismatch');
-        // }
-
-
       }
     );
   }

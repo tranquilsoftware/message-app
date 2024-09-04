@@ -29,28 +29,33 @@ const userSchema = new Schema({
   profile_pic: {  // Path to profile picture on web server
     type:     String,
     required: false,
-    default:  './img/default_user.png' // todo check that this address is pathed correctly.
+    default:  './img/default_user.png'
   },
 
   dark_mode: {
     type:     Boolean,
     required: false,
     default:  false
-  },  // TODO: implement dark mode (changes to css styling)
+  },  // TODO: implement dark mode (changes css styling)
 
   notifications: {
     type:     Boolean,
     required: false,
     default:  true
-  }, // todo: this is a placeholder for notifications to  be sent the the user, in some form of wahy.;
+  }, // todo: this is a placeholder for notifications to  be sent the the user
 
+  // Roles & Groups
 
   roles: [{
     type: String,
     enum: ['super', 'group-admin', 'user'],  // Group-Admin isnt initilized here, it is given group-admin from what the group channels backend ADMIN is.
   }],
 
-  groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
+  groups: [{
+    type: String,
+    required: true,
+    default: 1 // Refering to Group ID 1.. (General Group)
+  }],
 
 });
 
@@ -72,15 +77,24 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// // for comparing WITHOUT bcrypt // for testing development (raw string passowrds) like super, 123
+// for comparing WITHOUT bcrypt // for testing development (raw string passowrds) like super, 123
+//   I will not use this throughout the further development of th eproject as I want to gain experience with real time databases whilst incorporating sing bcrypt
+
 // userSchema.methods.comparePassword = async function(parameterizedPass) {
 //   let m_result = parameterizedPass === this.password;
 //   console.log('login result:', m_result);
 //   return m_result;
 // }
 
+
+
+// GETTERS FOR USER MODEL
 userSchema.methods.getUsername = function() {
   return this.username;
+}
+
+userSchema.methods.getProfilePicUrl = function() {
+  return this.profile_pic;
 }
 
 // define user model.

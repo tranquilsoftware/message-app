@@ -4,17 +4,16 @@ import {SocketService} from "./socket.service";
 
 
 export interface Message {
-  _id: string;
   chatRoomId: string;
-  userId: string;
   senderId: {
-    _id: string;
     username: string;
     profile_pic: string;
   };
   msgContent: string;
   timestamp: Date;
   read: boolean;
+
+
 }
 
 @Injectable({
@@ -29,10 +28,9 @@ export class ChatService {
     this.socket.sendMessage(message);
   }
 
-  // getMessages(room_id: string): Observable<Message[]> {
-  //   return this.socket.onMessage(); // todo review
-  // }
+
   getMessages(room_id: string): Observable<Message[]> {
+    //   return this.socket.onMessage(); // todo review
     return this.socket.onMessage().pipe(toArray());
   }
 
@@ -70,28 +68,36 @@ export class ChatService {
     });
   }
 
-  // When first joining a group chat, we have to obviously intiialize the messages first,
-  // //    we do that here.
-  // getInitialRoomMessages(roomId: string): Observable<Message[]> {
-  //   return new Observable((observer) => {
-  //     this.socket.emit('get-initial-messages', roomId);
-  //     this.socket.once('initial-messages', (messages: Message[]) => {
-  //       observer.next(messages);
-  //       observer.complete();
-  //     });
-  //   });
-  // }
+
+
+// use in phase 2
+  getInitialRoomMessages(roomId: string): Observable<Message[]> {
+    return new Observable((observer) => {
+      this.socket.getSocket().emit('get-initial-messages', roomId);
+      this.socket.getSocket().once('initial-messages', (messages: Message[]) => {
+        observer.next(messages);
+        observer.complete();
+      });
+    });
+  }
 
   // This retrieves the group room participants within a group room.
-  // getRoomMembers(roomId: string): Observable<string[]> { // array of group member's names
-  //   return new Observable((observer) => {
-  //     this.socket.emit('get-room-members', roomId);
-  //     this.socket.once('room-members', (participants: string[]) => {
-  //       observer.next(participants);
-  //       observer.complete();
-  //     });
-  //   });
-  // }
+  getRoomMembers(roomId: string): Observable<string[]> { // array of group member's names
+    return new Observable((observer) => {
+      this.socket.getSocket().emit('get-room-members', roomId);
+      this.socket.getSocket().once('room-members', (participants: string[]) => {
+        observer.next(participants);
+        observer.complete();
+      });
+    });
+  }
 
 
 }
+
+  // When first joining a group chat, we have to obviously intiialize the messages first,
+  // //    we do that here.
+
+
+
+

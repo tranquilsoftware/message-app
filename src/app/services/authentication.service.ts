@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import {Observable, of, BehaviorSubject, switchMap} from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Router } from "@angular/router";
 
@@ -22,6 +22,24 @@ export interface UserSettings {
   notifications: boolean;
 }
 
+export interface Group {
+  _id: string;
+  name: string;
+  chat_rooms: ChatRoom[];
+}
+
+export interface ChatRoom {
+  _id: number;
+  name: string;
+}
+
+export interface User {
+  _id: string;
+  username: string;
+  profile_pic: string;
+  // this is for client msging display (UI)
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -30,10 +48,24 @@ export class AuthenticationService {
   private apiRegisterUserUrl = 'http://localhost:5000/api/register';
   private apiUrl = 'http://localhost:5000/api/';
   private authStatusSubject = new BehaviorSubject<boolean>(this.isTokenValid());
-  private currentUserId: string | null = null; // this gets set on login.it is the _id attribute of the user.
+
+
+
+
+  // current user data types
+  private currentUserIdSubject: BehaviorSubject<string | null>;
+
+  private currentUser: User | null = null;
+  public currentUserId:  Observable<string | null>; // this gets set on login.it is the _id attribute of the user.
+
+
 
   constructor(private http: HttpClient, private router: Router) {
     this.checkAuthStatus();
+
+
+    this.currentUserIdSubject = new BehaviorSubject<string | null>(localStorage.getItem('current_user_id'));
+    this.currentUserId = this.currentUserIdSubject.asObservable();
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
@@ -41,7 +73,8 @@ export class AuthenticationService {
       .pipe(
         tap(response => {
           this.setSession(response);
-          this.setCurrentUserId(response.userId); // Save the user ID (_id)
+          this.setCurrentUserId(response.userId); // Saves the user ID (_id), and current_user_id to localStorage
+
         }),
         catchError(this.handleError<AuthResponse>('login'))
       );
@@ -75,7 +108,9 @@ export class AuthenticationService {
     localStorage.removeItem('expires_at')
     localStorage.removeItem('auth_token');
     localStorage.removeItem('current_user_id');
-    this.currentUserId = null;
+
+    this.currentUserIdSubject.next(null);
+    this.currentUser = null;
 
     this.authStatusSubject.next(false);
 
@@ -179,18 +214,44 @@ export class AuthenticationService {
 
   // USER ID FUNCTIONS
 
+  private get currentUserIdValue(): string | null {
+    return this.currentUserIdSubject.value;
+  }
+
+  public getCurrentUserId() {
+    return this.currentUserIdValue;
+  }
+
   // After successful login, this method is called.
   setCurrentUserId(userId: string): void {
-    this.currentUserId = userId;
+    this.currentUserIdSubject.next(userId);
     localStorage.setItem('current_user_id', userId);
   }
 
   // Retrieve the current user's ID
-  getCurrentUserId(): string | null {
-    if (!this.currentUserId) {
-      this.currentUserId = localStorage.getItem('current_user_id');
-    }
-    return this.currentUserId;
+  getCurrentUser(): Observable<User | null> {
+    return this.currentUserId.pipe(
+      switchMap(userId => {
+        if (!userId) {
+          return of(null);
+        }
+        if (this.currentUser && this.currentUser._id === userId) {
+          return of(this.currentUser);
+        }
+        return this.http.get(`/api/users/${userId}`, { responseType: 'text' }).pipe(
+          tap(rawResponse => console.log('Raw API response:', rawResponse)),
+          map(rawResponse => {
+            const user = JSON.parse(rawResponse) as User;
+            this.currentUser = user;
+            return user;
+          }),
+          catchError(error => {
+            console.error('Error fetching or parsing user data:', error);
+            return of(null);
+          })
+        );
+      })
+    );
   }
 
 }

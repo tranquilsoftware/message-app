@@ -1,27 +1,81 @@
 # MessageApp
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.1.4.
+## Angular Components
 
-## Development server
+### Login
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+I wanted to keep the login form as simple as possible. Nothing incredible here. Simply serves to login, generate a token and authorise the user to login for a certain amount of time (currently 1 hour).
 
-## Code scaffolding
+Components: Username, password fields, with a login button.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Build
+### Register User
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+The register form POSTs the user information to our database. Before the raw string password is passed into the registration operation, we hash the password using bcrypt. The hash is using a seed stored in the environment file.
 
-## Running unit tests
+Storing a password in a text file would never take place in a production codebase.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### Dashboard
 
-## Running end-to-end tests
+- shows different chat items in bubbles (individuals or group chats)
+- navigation bar (dashboard, settings, logout)
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+###
 
-## Further help
+Chat Room
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The main interface for real time message and video communication, between two people or a group.  
+Components:
+
+1. header (profile name/group name)
+2. Message display container (where messages pop up)
+3. Message input box (at the bottom of screen)
+4. Display how many people are in room
+5. Send button (_little paper airplane_ icon next to message input box)
+
+### Settings
+
+Allow a user to change their accounts attributes, such as:
+
+1. Profile picture
+2. Birth-date
+3. Dark mode
+4. Notifications
+
+### Super User (Admin) Panel
+
+A super user is a hardcoded user to be built into our framework. \[user: super, pass: 123\]
+
+## Angular Services
+
+###
+
+Socket
+
+The Socket service provides us a service, that we can use within our framework to communicate using Socket.io. It declares signals that are used for communicating to our web server, to pass information over to another component or save certain information.
+
+###
+
+Authentication
+
+The frameworks Authentication service is more comprehensive as opposed to our other services. As it is used quite often; to retrieve the current user information,
+
+### AuthGuard
+
+Within the framework, there is an Angular service named _AuthGuard_ that we ensure users are routed correctly, but only when they are correctly authenticated.
+
+E.g. We should route to the dashboard after the login, only when the login credentials are correct.
+
+### AuthInterceptor
+
+This service provides an authorization header to the user’s outgoing HTTP requests. It is needed to authenticate users. It is written under _auth.interceptor.ts_, and we attach it within the _providers_ section of our AppModule (_app.module.ts_).
+
+Navigation  
+The Navigation service was made to easily, and correctly route the user to the right web page, without unnecessary lines of code. A DRY (Don’t-Repeat-Yourself) approach that was taken during development.
+
+It will also prompt the developer console of a successful route, or else a detailed error message.
+
+### Settings
+
+Programmer variables, only has settings for showing debug logs currently.

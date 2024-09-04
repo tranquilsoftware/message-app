@@ -139,6 +139,18 @@ app.post('/messages', async (req, res) => {
   }
 });
 
+
+// GET the messages from a room
+// app.post('/messages/:chatRoomId', async (req, res) => {
+
+
+
+
+
+
+
+
+
 // register API routing
 app.post('/api/register', async(req, res) => {
   try {
@@ -152,9 +164,8 @@ app.post('/api/register', async(req, res) => {
     const token = generateToken({ userId: username });
 
 
-
     // Create new user
-    // note: yeah its raw password here, we use a pre-save hook to always hash it before we enter it as a raw string.
+    // note: its parameterized as a raw password here. But, we use a pre-save hook to always hash it before we enter it.
     const newUser = new User({ username, password, email });
     await newUser.save();
 
@@ -206,16 +217,18 @@ app.post('/api/login', async(req, res) => {
 
 
 
-    try {
-      const decoded = jwt.verify(token, process.env.SECRET_KEY);
-      console.log('Token is valid:', decoded);
+    // try {
+    //   const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    //   console.log('Token is valid:', decoded);
+    //
+    //
+    //   const decodedToken = jwt.decode(token, { complete: true });
+    //   console.log('\nDecoded token:', decodedToken);
+    // } catch (err) {
+    //   console.error('(server) Token verification failed:', err);
+    // }
 
 
-      const decodedToken = jwt.decode(token, { complete: true });
-      console.log('\nDecoded token:', decodedToken);
-    } catch (err) {
-      console.error('(server) Token verification failed:', err);
-    }
 
 
 
@@ -288,15 +301,17 @@ app.put('/api/user/settings/:setting', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found!' });
     }
 
-    console.log('User found:', user.username);
 
+    // If the setting requested to change is one of the below, than its valid...
     if (['birthdate', 'dark_mode', 'notifications'].includes(setting)) {
       user[setting] = value;
       await user.save();
       console.log(`Setting ${setting} updated successfully for user ${user.username}`);
       res.sendStatus(204);
     } else {
-      console.log(`Invalid setting: ${setting}`);
+      // it looks like we requested something that doesn't exist yet..
+      console.log(`We requested something that doesn't exist yet..
+      \nInvalid setting: ${setting}`);
       res.status(400).json({ message: 'Invalid setting' });
     }
   } catch (error) {
@@ -414,26 +429,25 @@ server.listen(PORT, () => {
 io.on('connection', (socket) => {
   console.log('(socket) New client connected');
 
-  socket.on('new-message', (data) => { // TODO THIS LOGIC SHOULD BE NAMED 'new-message' AS IT IS A HOOK WHEN A NEW MESSAGE IS SENT RIGHT.
-    console.log('(socket) Message received:', data);
 
-    // Create a new Message..
-    const message = new Message({
-      chatRoomId: data.chatRoomId,
-      userId: data.userId,
-      senderId: data.senderId,
-      msgContent: data.msgContent,
-      timestamp: new Date(),
+
+  // new message socket operation
+  socket.on('new-message', (new_message) => {
+    console.log('(socket) Received new message:', new_message);
+
+    // (mongoDB) declare the new Message schema ..
+    const message = new Message(new_message);
+
+    message.save().then(savedMessage => {
+        console.log('Message saved successfully:', savedMessage);
+        // Broadcast the saved message to all clients in the room
+        //   This operation, populates messages on screen, that were sent from other people.
+        socket.broadcast.to(message.chatRoomId).emit('new-message', message);
+        //io.to(message.chatRoomId).emit('new-message', message);
+
+    }).catch((err) => {
+      console.error('Error happened whilst saving the new message received! :', err);
     });
-
-    // Save the message to the database
-    // const savedMessage = message.save();
-
-    // Broadcast the saved message to all clients in the room
-    io.to(data.chatRoomId).emit('new-message', data);
-    // io.to(room_id).emit('new-message', { room_id, message: savedMessage });
-
-    // io.to(data.roomId).emit('message', data);
   });
 
 
@@ -457,6 +471,7 @@ io.on('connection', (socket) => {
   // Handle request for room members
   socket.on('get-room-members', (roomId) => {
     // For now, we'll just send a placeholder response
+    // TODO
     socket.emit('room-members', ['User1', 'User2', 'User3']);
   });
 

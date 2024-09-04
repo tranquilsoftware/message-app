@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 // Message schema
 const messageSchema = new Schema({
   chatRoomId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'ChatRoom', // Reference to the ChatRoom model
     required: true,
   },
-  userId: {
+  userId: { // Sent by user ID..
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',  // Reference to the User model
     required: true,

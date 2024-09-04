@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService, Message } from '../services/chat.service';
 import { Subscription } from 'rxjs';
-import {AuthenticationService} from "../services/authentication.service";
+import {AuthenticationService, User} from "../services/authentication.service";
 import {NavigationService} from "../services/navigation.service";
 
 
@@ -17,7 +17,7 @@ import {NavigationService} from "../services/navigation.service";
     <div class="chat-container">
       <div class="chat-header">
 
-<!--        BACK TO DASHBOARD-->
+        <!--        BACK TO DASHBOARD-->
         <button class="back-button" (click)="goToDashboard()">
           <!-- SVG Of Left Arrow Icon -->
 
@@ -29,11 +29,11 @@ import {NavigationService} from "../services/navigation.service";
 
         <!--    People In Room    -->
         <div class="chat-info">
-<!--        todo  chat room name here -->
-          <h2>{{ chatRoomMembers.length }} People</h2>
+          <!--        todo  chat room name here -->
+          <h2>{{ chatRoomMembers.length }} People in Room</h2>
         </div>
 
-<!--        VIDEO CALL BUTTON-->
+        <!--        VIDEO CALL BUTTON-->
         <button class="video-call-button">
           <!-- SVG Of Video Camera Icon -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -46,9 +46,10 @@ import {NavigationService} from "../services/navigation.service";
       </div>
 
 
+      <!--       Attempt at drawing messages on screen.. -->
       <div class="chat-messages">
         <div *ngFor="let message of messages"
-             [ngClass]="{'message': true, 'sent': isCurrentUser(message.userId), 'received': !isCurrentUser(message.userId)}">
+             [ngClass]="{'message': true, 'sent': isCurrentUser(message.senderId.username), 'received': !isCurrentUser(message.senderId.username)}">
           <div class="message-content">{{ message.msgContent }}</div>
           <div class="message-timestamp">{{ formatTimestamp(message.timestamp) }}</div>
         </div>
@@ -65,7 +66,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   // Attributes
   chatRoomId:   string = '';
   public chatRoomMembers: string[] = [];
-  messages:     Message[] = []; // declare a Message array.
+  messages:     Message[] = []; // declare a Message array. This is what is used in the front end for msgs on screen
   newMessage:   string = ''; // user message in message box..
   private messageSubscription: Subscription | undefined;
 
@@ -85,7 +86,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   }
 
-    // this.socket.connect();
+  // this.socket.connect();
 
 
   // Inherited function overrides
@@ -94,20 +95,20 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       this.chatRoomId = params['id'];
       this.chatService.joinRoom(this.chatRoomId);
       this.loadInitialMessages();
-      this.subscribeToNewMessages();
+      // this.subscribeToNewMessages();
     });
-/*
-    this.socketService.connect();
-    this.socketService.getSocket().emit('connection');
+    /*
+        this.socketService.connect();
+        this.socketService.getSocket().emit('connection');
 
-    this.socketService.joinRoom(this.chatRoomId);
-    this.socketService.onMessage().subscribe(message => {
-    //   //handle incoming message
-      this.addMessage(message);
-    //   // this.sendMessage();
-    });
-    //
-    */
+        this.socketService.joinRoom(this.chatRoomId);
+        this.socketService.onMessage().subscribe(message => {
+        //   //handle incoming message
+          this.addMessage(message);
+        //   // this.sendMessage();
+        });
+        //
+        */
 
 
 
@@ -145,33 +146,52 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     );
   }
 
-  sendMessage() {
+  sendMessage(): void {
     const currentUserId = this.authenticationService.getCurrentUserId();
     if (!currentUserId) {
-      console.error('User is not authenticated, or something is wrong with the user ID');
+      console.error('User is not authenticated');
       return;
     }
 
-    if (this.newMessage.trim()) { // newMessage is the text input ngModel
-      const message: Message = {
-        _id: '', // This will be set by the server
-        chatRoomId: this.chatRoomId,
-        senderId: {
-          _id: '',
-          username: '',
-          profile_pic: './img/default_user.png'
-        },
-        userId: currentUserId,
-        msgContent: this.newMessage,
-        timestamp: new Date(),
-        read: false
-      };
-
-      this.chatService.sendMessage(message);
-      this.addMessage(message);
-      this.newMessage = ''; // reset after sending setting..
-
+    if (!this.newMessage.trim()) {
+      console.log('Message is empty, not sending');
+      return;
     }
+
+
+    this.authenticationService.getCurrentUser().subscribe({
+      next: (currentUser: User | null) => {
+        if (!currentUser) {
+          console.error('Unable to fetch current user details');
+          return;
+        }
+
+        const message: Message = {
+          chatRoomId: this.chatRoomId,
+          senderId: {
+            username: currentUser.username,
+            profile_pic: currentUser.profile_pic
+          },
+          msgContent: this.newMessage,
+          timestamp: new Date(),
+          read: false
+        };
+
+        console.log('Sending message:', message);
+        this.chatService.sendMessage(message);
+        this.addMessage(message);
+        this.newMessage = '';
+      },
+      error: (error: any) => {
+        console.error('Error fetching current user details:', error);
+        if (error.error instanceof Error) {
+          console.error('Error message:', error.error.message);
+        } else {
+          console.error('Error status:', error.status);
+          console.error('Error body:', error.error);
+        }
+      }
+    });
   }
 
   // This is client side, add message, it doesnt do any server side stuff
@@ -191,6 +211,29 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     // this.chatService.getInitialRoomMessages(this.chatRoomId).subscribe(
     //   initialMessages => this.messages = initialMessages
     // );
+    const initial_msg_1: Message = {
+      chatRoomId: '1',
+      senderId: {
+        username: 'hardcoded',
+        profile_pic: ''
+      },
+      msgContent: 'hello world!',
+      timestamp: new Date(),
+      read: false
+    };
+
+    const initial_msg_2: Message = {
+      chatRoomId: '2',
+      senderId: {
+        username: 'bren',
+        profile_pic: ''
+      },
+      msgContent: 'hey world!',
+      timestamp: new Date(),
+      read: false
+    };
+
+    this.messages = [initial_msg_1, initial_msg_2];
   }
 
   subscribeToNewMessages(): void {

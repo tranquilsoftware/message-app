@@ -1,4 +1,4 @@
-
+09/08 – Started foundation of some components and socket authetncation stuff. Need to start setting up Express with Mongo.db
 
 11/08
 
@@ -11,6 +11,16 @@ MANUALLY RUN FIRST THEN IT CAN SUCCESSFULLY RUN CORS REQUESTS.
 12/08 Dashboard now opening correctly! Time to start developing dashboard..
 
 if logged in, and go to /login. it routes to /... NOTHING , review routing...
+
+
+23/08/2024
+I have been developing the project a little every day or two;
+1.	implementing MongoDB,
+2.	implementing the routing that is dependant on the local storage (login tokens)
+3.	developing the authentication services and fixing styling issues
+
+I am working on the styling as well today! My goal is to design a message app that looks aesthetic on mobile devices and personal computers. (with very little overhead).
+
 
 
 24/08
@@ -66,7 +76,7 @@ i declare io like:
       }
     });
 
- which solved the fucking socket bug! (no help from stackoverflow this time)
+ which solved the fucking socket bug! lol
 
 (socket) Message received: {
   _id: '',
@@ -86,3 +96,10 @@ sockets receiving messages, Now....
     on new-message it should populate to all other clients on the server/chat room
 whats working:
   socket recognises when: a user joins a server, recognises message received.
+
+
+
+
+4/09/2024
+
+- I will not use raw passwords throughout the further development of the project as I want to gain experience with real time databases whilst incorporating sing bcrypt

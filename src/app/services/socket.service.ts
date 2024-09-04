@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {Observable} from "rxjs";
+import {filter, Observable} from "rxjs";
 import {Socket, io} from "socket.io-client";
 
 @Injectable({
@@ -53,6 +53,9 @@ export class SocketService {
         this.socket.off('new-message');
       };
     });
+    // ).pipe(
+    //
+    //   filter((message) => message.chatRoomId === getcurrentUser.is in room_id) (filter from rxjs) -- psudocodes
   }
 
 

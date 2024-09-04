@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import {CommonModule, NgFor, NgIf} from '@angular/common';
 import {Router} from "@angular/router";
 import * as toastr from "toastr";
-import { AuthenticationService } from "../services/authentication.service";
+import {AuthenticationService, Group} from "../services/authentication.service";
 import {Observable } from "rxjs";
 import {map} from "rxjs/operators";
 import { SettingsComponent } from '../settings/settings.component'
@@ -28,6 +28,7 @@ import {NavigationService} from "../services/navigation.service";
   imports: [CommonModule, NgFor, NgIf],
   styleUrls: ['./dashboard.component.css'],
   template: `
+<!--    Old MessageApp individual users concept -->
 <!--    <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">-->
 <!--      <div class="dashboard-container">-->
 <!--        <div class="dashboard-content">-->
@@ -52,28 +53,28 @@ import {NavigationService} from "../services/navigation.service";
 <!--          </ul>-->
 <!--        </div>-->
 
-<!--        <nav class="bottom-nav">-->
-<!--          <button class="active">Messages</button>-->
-<!--          <button (click)="goToSettings()">Settings</button>-->
-<!--          <button (click)="authenticationService.logout()">Logout</button>-->
-<!--        </nav>-->
-<!--      </div>-->
 <!--    </ng-container>-->
 
 <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
   <div class="dashboard-container">
     <header>
-      <h1>Chat Rooms</h1>
+      <h1>Groups & Channels</h1>
     </header>
 
     <ul  class="message-list">
-      <li *ngFor="let room of chatRooms" (click)="openChat(room._id)" class="message-item">
-        {{ room.name }}
+
+<!--      Angular For group of every group to current user-->
+      <li *ngFor="let group of groups"  class="message-item" >
+        {{ group.name }}
+        <ul>
+          <li *ngFor="let chatRoom of group.chat_rooms" (click)="openChat(chatRoom._id)" >{{ chatRoom.name }}</li>
+        </ul>
       </li>
+
     </ul>
 
     <nav class="bottom-nav">
-      <button class="active">Messages</button>
+      <button class="active">Groups</button>
       <button (click)="goToSettings()">Settings</button>
       <button (click)="authenticationService.logout()">Logout</button>
     </nav>
@@ -94,7 +95,7 @@ import {NavigationService} from "../services/navigation.service";
 })
 export class DashboardComponent implements OnInit {
   // messages: Message[] = [];  // Init array
-  chatRooms: any[] = [];
+  groups: Group[] = [];
   isAuthenticated$: Observable<boolean> = new Observable<boolean>();
   constructor(private navigationService: NavigationService, public authenticationService: AuthenticationService) {
 
@@ -134,33 +135,32 @@ export class DashboardComponent implements OnInit {
     // TODO IMPLEMENT AS MONGODB REQUEST/POST SERVICE ETC.
 
 
-    this.chatRooms = [
-      { _id: '1', name: 'General Chat' },
-      { _id: '2', name: 'Random' },
+    this.groups = [
+      {
+        _id: '100',
+        name: 'All',
+        chat_rooms: [
+          { _id: 1, name: 'Fun Channel' },
+          { _id: 2, name: 'General Channel' }
+        ]
+      },
+
+      { _id: '102',
+        name: 'IT Group',
+        chat_rooms: [
+          { _id: 20, name: 'Tech Channel' },
+          { _id: 21, name: 'Software Channel' }
+        ] },
+
+      { _id: '103',
+        name: 'School Group',
+        chat_rooms: [
+          { _id: 30, name: 'Schoolwork Channel' },
+        ]
+      },
     ];
 
-    // HARD CODE FOR FIRST TIME,
-    // this.messages = [
-    //   {
-    //     chat_id: 1,
-    //     name: 'Jeff',
-    //     avatar: '../../img/i.jpg',
-    //     last_msg: 'Hello World',
-    //     time: '5 min',
-    //     unread: 5,
-    //     online: true
-    //   },
-    //   {
-    //     chat_id: 2,
-    //     name: 'Charlie',
-    //     avatar: '../../img/i.jpg',
-    //     last_msg: "hello",
-    //     time: '15 min',
-    //     unread: 0,
-    //     online: false
-    //   },
 
-    // ];
   }
 
   goToSettings(): void {

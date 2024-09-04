@@ -4,6 +4,9 @@ const Schema = mongoose.Schema;
 // schema for a chat room..
 const chatRoomSchema = new Schema({
 
+  groupId: [{ // belongs to GroupID..
+    type: String,
+  }],
 
   members: [{
     type: Schema.Types.ObjectId,
@@ -23,5 +26,4 @@ const chatRoomSchema = new Schema({
 
 // define the model for chat rooms..
 const ChatRoom = mongoose.model('ChatRoom', chatRoomSchema, 'chatrooms');
-
 module.exports = ChatRoom;
