@@ -30,7 +30,7 @@ import {NavigationService} from "../services/navigation.service";
         <!--    People In Room    -->
         <div class="chat-info">
           <!--        todo  chat room name here -->
-          <h2>{{ chatRoomMembers.length }} People in Room</h2>
+<!--          <h2>Room</h2>-->
         </div>
 
         <!--        VIDEO CALL BUTTON-->
@@ -65,7 +65,7 @@ import {NavigationService} from "../services/navigation.service";
 export class ChatRoomComponent implements OnInit, OnDestroy {
   // Attributes
   chatRoomId:   string = '';
-  public chatRoomMembers: string[] = [];
+  // public chatRoomMembers: string[] = []; todo
   messages:     Message[] = []; // declare a Message array. This is what is used in the front end for msgs on screen
   newMessage:   string = ''; // user message in message box..
   private messageSubscription: Subscription | undefined;
