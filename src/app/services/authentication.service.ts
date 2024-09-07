@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
-import {Observable, of, BehaviorSubject, switchMap} from 'rxjs';
+import {Observable, of, BehaviorSubject, switchMap, throwError} from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Router } from "@angular/router";
 
@@ -36,6 +36,7 @@ export interface ChatRoom {
 export interface User {
   _id: string;
   username: string;
+  email: string;
   profile_pic: string;
   // this is for client msging display (UI)
 }
@@ -212,6 +213,10 @@ export class AuthenticationService {
   }
 
 
+
+
+
+
   // USER ID FUNCTIONS
 
   private get currentUserIdValue(): string | null {
@@ -230,29 +235,54 @@ export class AuthenticationService {
 
   // Retrieve the current user's ID
   getCurrentUser(): Observable<User | null> {
-    return this.currentUserId.pipe(
-      switchMap(userId => {
-        if (!userId) {
-          return of(null);
+    // const token = this.getToken();
+    // const token = localStorage.getItem('auth_token');
+    const token = this.getToken();
+    console.log('(getCurrentUser) - Token:', token);
+
+    if (!token) {
+      console.error('No token found, user is likely not authenticated!')
+      return throwError(() => new Error('User probably not authenticated'));
+    }
+
+
+    return this.http.get<User>('http://localhost:5000/api/user/current').pipe(
+      catchError((error) => {
+        console.error('Error in getCurrentUser:', error);
+
+        if( error.status === 401) {
+          console.error('Unauthorized access, token invalid or expired?');
         }
-        if (this.currentUser && this.currentUser._id === userId) {
-          return of(this.currentUser);
-        }
-        return this.http.get(`/api/users/${userId}`, { responseType: 'text' }).pipe(
-          tap(rawResponse => console.log('Raw API response:', rawResponse)),
-          map(rawResponse => {
-            const user = JSON.parse(rawResponse) as User;
-            this.currentUser = user;
-            return user;
-          }),
-          catchError(error => {
-            console.error('Error fetching or parsing user data:', error);
-            return of(null);
-          })
-        );
+        return throwError(() => new Error('Failed to fetch current user'));
       })
     );
   }
+
+  // getCurrentUser(): Observable<User | null> {
+  //   return this.currentUserId.pipe(
+  //     switchMap(userId => {
+  //       if (!userId) {
+  //         return of(null);
+  //       }
+  //       if (this.currentUser && this.currentUser._id === userId) {
+  //         return of(this.currentUser);
+  //       }
+  //       return this.http.get(`/api/users/${userId}`, { responseType: 'text' }).pipe(
+  //         tap(rawResponse => console.log('Raw API response:', rawResponse)),
+  //         map(rawResponse => {
+  //           const user = JSON.parse(rawResponse) as User;
+  //           this.currentUser = user;
+  //           return user;
+  //         }),
+  //         catchError(error => {
+  //           console.error('Error fetching or parsing user data:', error);
+  //           return of(null);
+  //         })
+  //
+  //       );
+  //     })
+  //   );
+  // }
 
 }
 

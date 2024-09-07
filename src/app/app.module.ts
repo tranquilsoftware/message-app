@@ -37,7 +37,6 @@ const config: SocketIoConfig = {
     AdminPanelComponent,
     ChatRoomComponent,
     SocketIoModule.forRoot(config) // setup socket
-    // SocketIoModule.forRoot({url: 'http://localhost:5000'}) // setup socket
   ],
 
   providers: [{SocketService, provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true}, ],

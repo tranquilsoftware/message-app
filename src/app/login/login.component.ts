@@ -15,6 +15,7 @@ import {NavigationService} from "../services/navigation.service";
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
+  // Classes input fields
   m_username: string = '';
   m_password: string = '';
 
@@ -29,7 +30,7 @@ export class LoginComponent implements OnInit {
     this.authService.isAuthenticated().subscribe(isAuthenticated => {
       if (isAuthenticated) {
         console.log('User is already logged in. Navigating to dashboard.');
-        this.navigationService.navigateToDashboard();
+        return this.navigationService.navigateToDashboard();
       } else {
         console.log('User not logged in. Staying on login page.');
       }
@@ -37,9 +38,9 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log('Login attempt for user:', this.m_username);
+    console.log('Submitting Login attempt for user:', this.m_username);
 
-    // begin login with authentication service
+    // Begin login with authentication service
     this.authService.login(this.m_username, this.m_password).subscribe({
       next: (response: AuthResponse) => {
         console.log('Login response:', response);

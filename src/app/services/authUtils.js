@@ -6,14 +6,21 @@ const SECRET_KEY = process.env.SECRET_KEY || 'secret'; // Use a default for loca
 
 // This class is only used to get tokens (using jwt)
 // (Not an angular service. not described in assignment)
-const generateToken = (payload) => {
+// payload is currently user._id
+const generateToken = (user) => {
   // console.log('GENERATING TOKEN WITH KEY: [', SECRET_KEY, ']');
 
-  if (!payload) {
+  if (!user) {
     throw new Error('Payload is required for token generation');
   }
 
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: '1800s' });
+  const payload = {
+    userId: user._id,
+    username: user.username,
+    email: user.email
+  };
+
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: '3600s' });
 };
 
 

@@ -24,9 +24,11 @@ const mongoDBPath = 'mongodb://localhost:27017/mydb';
 const ChatRoom = require('./models/ChatRoom');
 const Message = require('./models/Message');
 const User = require('./models/User');
+const {decode} = require("jsonwebtoken");
 
 
-//   MIDDLEWARE
+
+// Require the .env environment file into our app
 require('dotenv').config();
 // attach body parser and cors to express app
 app.use(bodyParser.json());
@@ -35,9 +37,17 @@ app.use(bodyParser.json());
 app.use(cors({
   origin: 'http://localhost:4200', // ONLY USE 4200
   methods: 'GET, POST, PUT, DELETE, OPTIONS',
-  allowedHeaders: 'Content-Type, Authorization',
+  allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+  // allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
 }));
+
+// app.use((req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "*");
+//   res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+//   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+//   next();
+// })
 
 
 app.options('*', cors()); // Allow all preflight requests
@@ -55,50 +65,81 @@ mongoose.connect(mongoDBPath).then(r => console.log('MongoDB successfully connec
 // define our api url
 const apiUrl = '/api';
 
+
+
+
 // Before anything! do the following important things...
 // Middleware to authenticate JWT token
+// const authenticateToken = (req, res, next) => {
+//   // Log headers for debugging
+// //   console.log('Authenticating token now..');
+// //   console.log('Request Headers:', req.headers);
+// //
+// //   const authHeader = req.headers['authorization'];
+// //   console.log('Auth header:', authHeader);
+// //
+// //   const token = authHeader && authHeader.split(' ')[1]; // extract token from header by splitting it
+// //   if (!token) {
+// //     console.error('Token missing in authorization header');
+// //     return res.sendStatus(401).json({message: 'Missing token, it isnt in auth header'});
+// //   }
+// //
+// //
+// // //   jwt.verify(token, SECRET_KEY, (err, user) => {
+// //   jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+// //     if (err) {
+// //       console.error('>:(! Token verification failed:', err.message);
+// //       return res.status(403).json({ message: 'Invalid token' });
+// //     }
+// //
+// //     console.log(':D Token verified');
+// //     req.user = user;
+// //     next();
+// //   });
+//
+//   try{
+//     console.log('Authenticating token now..');
+//     console.log('Request Headers:', req.headers);
+//     const authHeader = req.headers['authorization'];
+//     console.log('Auth header:', authHeader);
+//     if (!authHeader) {
+//       return console.error('Auth Header wasnt defined, returning!');
+//     }
+//
+//     const token = req.headers.authorization.split(" ")[1];
+//     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+//     console.log('decoded token:')
+//     req.userId = {userId: decodedToken.userId};
+//   } catch (error) {
+//     res.status(401).json({message: 'Most likely not authenticated'});
+//   }
+// }
+
+// new auth
+// module.exports = (req, res, next) => {
 const authenticateToken = (req, res, next) => {
-  // Log headers for debugging
-  console.log('Request Headers:', req.headers);
+  try {
 
-  const authHeader = req.headers['authorization'];
-  if (!authHeader) {
-    console.error('Authorization header missing');
-    return res.sendStatus(401);
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    console.error('(authenticateToken | decodedToken) :', decodedToken);
+    req.userData = {
+      email: decodedToken.email,
+      userId: decodedToken.userId,
+      username: decodedToken.username
+    };
+
+    // req.userId = {userId: decodedToken.userId};
+    // next();
+  } catch(error) {
+    res.status(401).json({message: "You are not authenticated"});
   }
+}
 
-
-
-  const token = authHeader && authHeader.split(' ')[1]; // extract token from header
-
-
-  if (!token) {
-    console.error('Token missing in authorization header');
-    return res.sendStatus(401);
-  } else if (token == null) {
-    console.error('Authentication Token problem ! was nulL!!!');
-    return res.sendStatus(401);
-  }
-
-  // Log token for debugging
-  console.log(':) Token ACTUALLY extracted:', token);
-
-// TODO SECRET KEY CHANGEss
-  // why the fuck does it not work when i use var 'SECRET_KEY', but when i hardcode 'secret' it actually fucking works. i dont know. ive never seen anything like this
-//   jwt.verify(token, SECRET_KEY, (err, user) => {
-  jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
-    if (err) {
-      console.error('>:(! Token verification failed:', err.message);
-      return res.sendStatus(403);
-    }
-    console.log(':D HOLY SHIT IT WORKS');
-    req.user = user;
-    next();
-  });
-};
 
 // Apply middleware to all routes that require authentication
 app.use('/api/user/settings', authenticateToken);
+app.use('/api/user/current', authenticateToken);
 
 // Endpoint to GET (load) messages for a specific chat room
 app.get('/messages/:chatRoomId', async (req, res) => {
@@ -208,11 +249,13 @@ app.post('/api/login', async(req, res) => {
     }
 
 
-    // console.log('SECRET_KEY:', process.env.SECRET_KEY);
     console.log('user._id: ', user._id);
+    console.log('user.username', user.username);
+    console.log('user.email', user.email);
+
 
     // Generate JWT token for valid user
-    const token = generateToken({ userId: user._id });
+    const token = generateToken({ userId: user._id, username: user.username, email: user.email });
     console.log('Generated token:', token);
 
 
@@ -265,8 +308,8 @@ app.post('/api/login', async(req, res) => {
 // GET  user settings..
 app.get('/api/user/settings', authenticateToken, async (req, res) => {
   try {
-    console.log('\nUser _id:', req.user.userId);
-    const user = await User.findById(req.user.userId).exec();
+    console.log('\nUser _id:', req.userData.userId);
+    const user = await User.findById(req.userData.userId).exec();
 
 
     if (!user) {
@@ -278,7 +321,7 @@ app.get('/api/user/settings', authenticateToken, async (req, res) => {
 
     }
 
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -291,13 +334,13 @@ app.put('/api/user/settings/:setting', authenticateToken, async (req, res) => {
   const value = req.body.value;
 
   console.log(`Attempting to update setting: ${setting} with value: ${value}`);
-  console.log('User ID from token:', req.user.userId);
+  console.log('User ID from token:', req.userData.userId);
 
   try {
-    const user = await User.findById(req.user.userId).exec();
+    const user = await User.findById(req.userData.userId).exec();
 
     if (!user) {
-      console.log(`User not found for ID: ${req.user.userId}`);
+      console.log(`User not found for ID: ${req.userData.userId}`);
       return res.status(404).json({ message: 'User not found!' });
     }
 
@@ -306,8 +349,8 @@ app.put('/api/user/settings/:setting', authenticateToken, async (req, res) => {
     if (['birthdate', 'dark_mode', 'notifications'].includes(setting)) {
       user[setting] = value;
       await user.save();
-      console.log(`Setting ${setting} updated successfully for user ${user.username}`);
-      res.sendStatus(204);
+      console.log(`Setting ${setting} updated successfully for user ${req.userData.userId}`);
+      return res.sendStatus(204);
     } else {
       // it looks like we requested something that doesn't exist yet..
       console.log(`We requested something that doesn't exist yet..
@@ -322,15 +365,39 @@ app.put('/api/user/settings/:setting', authenticateToken, async (req, res) => {
 
 
 
+
+app.get('/api/user/current', authenticateToken, async (req, res) => {
+  try {
+    // const user = await User.findById(req.user.userId).select('-password');
+    const user = await User.findById(req.userData.userId).select('-password');
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    return res.json(user);
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+
+
+
+
 // Setup multer for file uploads
 const upload = multer({ dest: 'uploads/' });
 
 // Upload the user's profile picture..
 app.post('/api/user/profile-picture', authenticateToken, upload.single('profilePicture'), async (req, res) => {
   console.log('Received request for profile picture upload');
-  console.log('User from token:', req.user);
+  console.log('User from token:', req.userData.userId);
   try {
-    const user = await User.findById(req.user.userId).exec();
+    const user = await User.findById(req.userData.userId).exec();
     console.log('Found user:', user);
 
     if (!user) {
@@ -341,7 +408,9 @@ app.post('/api/user/profile-picture', authenticateToken, upload.single('profileP
     // Assuming the file is stored in 'uploads' directory
     user.profile_pic = `/uploads/${req.file.filename}`; // Save file path in user profile
     await user.save();
-    res.json({ url: user.profile_pic });
+
+    // res.json({ url: user.profile_pic });
+    res.status(200).json({url: user.profile_pic}); //todo review
     console.log('Tried to save pp!');
 
   } catch (error) {
@@ -349,29 +418,6 @@ app.post('/api/user/profile-picture', authenticateToken, upload.single('profileP
     res.status(500).json({ message: 'Server error' });
   }
 });
-// app.post('/api/user/profile-picture', authenticateToken, upload.single('profilePicture'), async (req, res) => {
-//   try {
-//     console.log('trying to upload pp...');
-//     // const user = await User.findById(req.user.username);
-//     const user = await User.findById(req.user.userId).exec();
-//
-//     if (!user) {
-//       console.error('INVALID USER. DURING UPLOADING PP.');
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-//
-//     // Assuming the file is stored in 'uploads' directory
-//     user.profile_pic = `/uploads/${req.file.filename}`; // Save file path in user profile
-//     await user.save();
-//
-//     res.json({ url: user.profile_pic });
-//
-//     console.log('Tried to save pp!');
-//
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
 
 
 
@@ -387,7 +433,7 @@ app.post('/api/user/profile-picture', authenticateToken, upload.single('profileP
 
 // Protected route example
 app.get('/api/dashboard', authenticateToken, (req, res) => {
-  res.json({ message: 'Welcome to the dashboard!', user: req.user.username });
+  res.json({ message: 'Welcome to the dashboard!', user: req.userData.username });
 });
 
 

@@ -103,3 +103,30 @@ whats working:
 4/09/2024
 
 - I will not use raw passwords throughout the further development of the project as I want to gain experience with real time databases whilst incorporating sing bcrypt
+
+
+7/09/2024
+
+Authorisation Token was not supplied in the request header.
+
+BUG FOUND in auth.interceptor. I had not typed "Authorisation"
+
+bug code:
+        request = request.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+beautiful working code:
+
+        intercept(request: HttpRequest<any>, next: HttpHandler) {
+          const token = this.authenticationService.getToken();
+          console.log('(Authentication Interceptor) - Token:', token);
+
+          const authRequest = request.clone({
+            headers: request.headers.set("Authorization", "Bearer " + token)
+          });
+
+          return next.handle(authRequest);
+        }

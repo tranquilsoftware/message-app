@@ -166,7 +166,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
           return;
         }
 
-        const message: Message = {
+  /*      const message: Message = {
           chatRoomId: this.chatRoomId,
           senderId: {
             username: currentUser.username,
@@ -178,9 +178,15 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         };
 
         console.log('Sending message:', message);
+
+        // Send message to server (save to MongoDB)
         this.chatService.sendMessage(message);
+
+        // Send message to client chat room
         this.addMessage(message);
-        this.newMessage = '';
+
+        // Reset the message form input form.
+        this.newMessage = '';*/
       },
       error: (error: any) => {
         console.error('Error fetching current user details:', error);

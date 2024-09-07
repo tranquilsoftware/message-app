@@ -56,8 +56,7 @@ export class RegisterUserComponent implements OnInit {
   onSubmit() {
     // Check if password and confirm password field are same..
     if (this.password !== this.confirm_password) {
-      toastr.error('Passwords do not match.', 'Password Match Error');
-      return;
+      return toastr.error('Passwords do not match.', 'Password Match Error');
     }
 
     // Safe to register user..
@@ -73,7 +72,7 @@ export class RegisterUserComponent implements OnInit {
 
       },
       error: (err) => {
-        console.error('Register error:', err);
+        console.error('Registration error:', err);
         toastr.error('Oh dear, something bad happened. You broke something.', 'Error');
       }
     }

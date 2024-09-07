@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import {filter, Observable} from "rxjs";
 import {Socket, io} from "socket.io-client";
+import {AuthenticationService} from "./authentication.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class SocketService {
   private socket: Socket;
-  constructor()
+  constructor(private authenticationService: AuthenticationService)
   {
     const SOCKET_ENDPOINT = 'http://localhost:5000';
     // const SOCKET_ENDPOINT = 'ws://localhost:5000/socket.io/';
@@ -38,13 +39,16 @@ export class SocketService {
   }
 
   sendMessage(message: any) {
+    const token = this.authenticationService.getToken();
+    message.token = token;
     console.log('Sending message to socket:', message);
-    this.socket.emit('new-message', message);
+    return this.socket.emit('new-message', message);
   }
 
   onMessage(): Observable<any> {
     return new Observable(observer => {
       this.socket.on('new-message', (data) => {
+        data.token = this.authenticationService.getToken();
         observer.next(data);
       });
 
