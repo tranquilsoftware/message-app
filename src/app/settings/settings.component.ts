@@ -99,7 +99,10 @@ export class SettingsComponent implements OnInit {
   }
   loadUserSettings(): void {
     this.authService.getUserSettings().subscribe(
-      settings => this.user = settings,
+      settings => {
+        this.user = settings;
+        console.log('Loaded user settings:', this.user); // Add this for debugging
+      },
       error => {
         if (error.status === 401) {
           console.error('Unauthorized access - perhaps the user is not logged in or the session has expired.');

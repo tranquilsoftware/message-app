@@ -14,7 +14,7 @@ export interface AuthResponse {
 }
 
 export interface UserSettings {
-  name: string;
+  username: string;
   email: string;
   birthdate: string;
   profile_pic: string;
