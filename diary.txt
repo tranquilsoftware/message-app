@@ -130,3 +130,8 @@ beautiful working code:
 
           return next.handle(authRequest);
         }
+
+
+  // todo implement room id to sending msg.
+
+ changed addMessage(msg) to addMessage(room_id, msg) , should make it easier to direct to the right area. (db) etc

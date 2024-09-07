@@ -149,55 +149,88 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   sendMessage(): void {
     const currentUserId = this.authenticationService.getCurrentUserId();
     if (!currentUserId) {
-      console.error('User is not authenticated');
-      return;
+      return console.error('User is not authenticated');
     }
 
     if (!this.newMessage.trim()) {
-      console.log('Message is empty, not sending');
-      return;
+      return console.log('Message is empty, not sending');
     }
-
 
     this.authenticationService.getCurrentUser().subscribe({
       next: (currentUser: User | null) => {
+
         if (!currentUser) {
           console.error('Unable to fetch current user details');
           return;
         }
 
-  /*      const message: Message = {
+        console.log('Current User:', currentUser);
+
+        // Move the code that depends on currentUser here
+        const message: Message = {
           chatRoomId: this.chatRoomId,
           senderId: {
             username: currentUser.username,
-            profile_pic: currentUser.profile_pic
+            profile_pic: currentUser.profile_pic,
           },
           msgContent: this.newMessage,
           timestamp: new Date(),
           read: false
         };
-
-        console.log('Sending message:', message);
-
-        // Send message to server (save to MongoDB)
         this.chatService.sendMessage(message);
 
-        // Send message to client chat room
-        this.addMessage(message);
-
-        // Reset the message form input form.
-        this.newMessage = '';*/
       },
       error: (error: any) => {
         console.error('Error fetching current user details:', error);
-        if (error.error instanceof Error) {
-          console.error('Error message:', error.error.message);
-        } else {
-          console.error('Error status:', error.status);
-          console.error('Error body:', error.error);
-        }
       }
     });
+
+    // this.authenticationService.getCurrentUser().subscribe({
+    //   next: (currentUser: User | null) => {
+    //     if (!currentUser) {
+    //       console.error('Unable to fetch current user details');
+    //       return;
+    //     }
+    //
+    //
+    //
+    //     const message: Message = {
+    //       chatRoomId: this.chatRoomId,
+    //       senderId: {
+    //         username: currentUser.username,
+    //         profile_pic: currentUser.profile_pic,
+    //       },
+    //       msgContent: this.newMessage,
+    //       timestamp: new Date(),
+    //       read: false
+    //     };
+    //
+    //     console.log('Sending message:', message);
+    //
+    //     // Send message to server (save to MongoDB)
+    //     this.chatService.sendMessage(message);
+    //
+    //     // Send message to client chat room
+    //     this.addMessage(message);
+    //
+    //     // Reset the message form input form.
+    //     this.newMessage = '';
+    //
+    //
+    //
+    //   },
+    //   error: (error: any) => {
+    //     console.error('Error fetching current user details:', error);
+    //     if (error.error instanceof Error) {
+    //       console.error('Error message:', error.error.message);
+    //     } else {
+    //       console.error('Error status:', error.status);
+    //       console.error('Error body:', error.error);
+    //     }
+    //   }
+    // });
+    //
+
   }
 
   // This is client side, add message, it doesnt do any server side stuff

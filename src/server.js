@@ -42,12 +42,12 @@ app.use(cors({
   credentials: true,
 }));
 
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-//   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
-//   next();
-// })
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+  next();
+})
 
 
 app.options('*', cors()); // Allow all preflight requests
@@ -117,7 +117,7 @@ const apiUrl = '/api';
 
 // new auth
 // module.exports = (req, res, next) => {
-const authenticateToken = (req, res, next) => {
+const authenticateToken = (req, res) => {
   try {
 
     const token = req.headers.authorization.split(" ")[1];
@@ -129,8 +129,6 @@ const authenticateToken = (req, res, next) => {
       username: decodedToken.username
     };
 
-    // req.userId = {userId: decodedToken.userId};
-    // next();
   } catch(error) {
     res.status(401).json({message: "You are not authenticated"});
   }

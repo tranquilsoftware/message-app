@@ -24,8 +24,8 @@ export class ChatService {
   constructor(private socket: SocketService) {
   }
 
-  sendMessage(message: Message) {
-    this.socket.sendMessage(message);
+  sendMessage(/*room_id: any, */message: Message) {
+    this.socket.sendMessage(/*room_id, */message);
   }
 
 

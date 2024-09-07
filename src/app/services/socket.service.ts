@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import {filter, Observable} from "rxjs";
-import {Socket, io} from "socket.io-client";
+import {Injectable} from '@angular/core';
+import {Observable} from "rxjs";
+import {io, Socket} from "socket.io-client";
 import {AuthenticationService} from "./authentication.service";
 
 @Injectable({
@@ -38,9 +38,10 @@ export class SocketService {
     this.socket.emit('join', roomId);
   }
 
-  sendMessage(message: any) {
-    const token = this.authenticationService.getToken();
-    message.token = token;
+  // todo implement room id to sending msg.
+  sendMessage(/*room_id: any, */message: any) {
+    message.token = this.authenticationService.getToken();
+
     console.log('Sending message to socket:', message);
     return this.socket.emit('new-message', message);
   }

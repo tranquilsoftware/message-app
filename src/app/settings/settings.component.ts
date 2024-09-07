@@ -2,8 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {AuthenticationService, UserSettings} from "../services/authentication.service";
-import {Router} from "@angular/router";
-import {HttpHeaders} from "@angular/common/http";
+import {NavigationService} from "../services/navigation.service";
 // const { generateToken } = require('../src/app/services/authUtils'); // for mkaing JWT Tokens.
 
 
@@ -30,7 +29,7 @@ TODO Functions:
           <img [src]="user.profile_pic || '/img/default_user.png'" alt="Profile Picture">
           <div class="change-overlay">Change</div>
         </div>
-        <h2>{{ user.name }}</h2>
+        <h2>{{ user.username }}</h2>
         <p>{{ user.email }}</p>
       </div>
 
@@ -77,7 +76,7 @@ TODO Functions:
 })
 export class SettingsComponent implements OnInit {
   user: UserSettings = {
-    name:           '',     // Display name of profile, could be full name or alias.
+    username:       '',     // Display name of profile, could be full name or alias.
     email:          '',     // Users email address.
     birthdate:      '',     // String of users birthdate
     profile_pic:    '',     // Path to profile picture on web server
@@ -87,7 +86,7 @@ export class SettingsComponent implements OnInit {
 
   constructor(
     public authService: AuthenticationService,
-    private router: Router)
+    private navigationService: NavigationService)
   {}
 
   ngOnInit(): void {
@@ -95,8 +94,9 @@ export class SettingsComponent implements OnInit {
   }
 
   goToDashboard() : void {
-    this.router.navigate(['/dashboard']);
+    this.navigationService.navigateToDashboard();
   }
+
   loadUserSettings(): void {
     this.authService.getUserSettings().subscribe(
       settings => {
