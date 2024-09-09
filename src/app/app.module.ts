@@ -26,7 +26,9 @@ const config: SocketIoConfig = {
 // Import other components as needed
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    AdminPanelComponent,
+  ],
   imports: [
     BrowserModule,
     RouterModule.forRoot(routes),  AppRoutingModule, // setup routing..
@@ -34,7 +36,6 @@ const config: SocketIoConfig = {
     LoginComponent,
     DashboardComponent,
     SettingsComponent,
-    AdminPanelComponent,
     ChatRoomComponent,
     SocketIoModule.forRoot(config) // setup socket
   ],

@@ -17,17 +17,12 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthenticationService,
-    private settingsService: SettingsService,
-    // private socket: Socket
-  )
-  {
-
-  }
+    private settingsService: SettingsService) {}
 
   ngOnInit(): void {
-    console.log('\nTrying to read token.');
+    console.log('\nAttempting to read token..');
     if (this.settingsService.showDebugLogs)
-    toastr.info('reading token...');
+      toastr.info('reading token...');
 
     if ( this.authService.isTokenExpired()) {
       this.router.navigate(['/login']).then(

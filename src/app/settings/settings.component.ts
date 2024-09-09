@@ -3,13 +3,7 @@ import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {AuthenticationService, UserSettings} from "../services/authentication.service";
 import {NavigationService} from "../services/navigation.service";
-// const { generateToken } = require('../src/app/services/authUtils'); // for mkaing JWT Tokens.
 
-
-/*
-TODO Functions:
-  shows privilige power ON SETTINGS (super admin, group admin, user etc), shows user profile image
- */
 
 @Component({
   selector: 'app-settings',
@@ -84,6 +78,7 @@ export class SettingsComponent implements OnInit {
     notifications:  true    // todo: this is a placeholder for notifications to  be sent the the user, in some form of wahy.;
   }
 
+  // TODO Implement maybe: show timestamps on messages, notifications?
   constructor(
     public authService: AuthenticationService,
     private navigationService: NavigationService)
@@ -93,7 +88,7 @@ export class SettingsComponent implements OnInit {
     this.loadUserSettings();
   }
 
-  goToDashboard() : void {
+  goToDashboard(): void {
     this.navigationService.navigateToDashboard();
   }
 

@@ -135,3 +135,15 @@ beautiful working code:
   // todo implement room id to sending msg.
 
  changed addMessage(msg) to addMessage(room_id, msg) , should make it easier to direct to the right area. (db) etc
+
+8/09
+
+can post message to chatroom, however u will see the messsage everywhere.
+
+make the message only appear if the messages chatroom id, is the chatroom were in
+
+
+9/9
+
+- scrollToBottom() func not working
+- tidy message.js

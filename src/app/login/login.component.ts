@@ -21,9 +21,7 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private authService: AuthenticationService,
-    private navigationService: NavigationService,
-    // private settingsService: SettingsService
-  ) { }
+    private navigationService: NavigationService) {}
 
   ngOnInit() {
     // Check if user is already logged in
@@ -65,7 +63,7 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  onRegister() : void { // register text click
+  onRegister(): void { // onClick() of 'register here'
     this.navigationService.navigateToRegisterUser();
   }
 

@@ -140,13 +140,18 @@ app.use('/api/user/settings', authenticateToken);
 app.use('/api/user/current', authenticateToken);
 
 // Endpoint to GET (load) messages for a specific chat room
-app.get('/messages/:chatRoomId', async (req, res) => {
+app.get('/api/messages/:chatRoomId', async (req, res) => {
   try {
-    const messages = await Message.find(
+/*    const messages = await Message.find(
       { chatRoomId: req.params.chatRoomId })
       .populate('senderId', 'username profile_pic')
       .sort('timestamp')
       .exec();
+    res.json(messages);
+    */
+    const chatRoomId = req.params.chatRoomId;
+    const messages = await Message.find({ roomId: chatRoomId });
+    console.log('YEAH !!');
     res.json(messages);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -155,7 +160,7 @@ app.get('/messages/:chatRoomId', async (req, res) => {
 
 
 // Send a new message
-app.post('/messages', async (req, res) => {
+app.post('/api/messages', async (req, res) => {
   const { chatRoomId, userId, msgContent } = req.body;
 
   const newMessage = new Message({
@@ -476,21 +481,35 @@ io.on('connection', (socket) => {
 
 
   // new message socket operation
-  socket.on('new-message', (new_message) => {
-    console.log('(socket) Received new message:', new_message);
+  socket.on('new-message', (message_data) => {
+
+    console.log('(socket) Received new message:', message_data);
 
     // (mongoDB) declare the new Message schema ..
-    const message = new Message(new_message);
+    const new_message = new Message({
+      chatRoomId: message_data.chatRoomId,
 
-    message.save().then(savedMessage => {
-        console.log('Message saved successfully:', savedMessage);
+      senderId: {
+        username: message_data.senderId.username,
+        profile_pic: message_data.senderId.profile_pic
+      },
+
+      msgContent: message_data.msgContent,
+      timestamp:  new Date(message_data.timestamp),
+      read:       message_data.read
+    })
+
+    new_message.save()
+      .then((saved_message) => {
+
         // Broadcast the saved message to all clients in the room
         //   This operation, populates messages on screen, that were sent from other people.
-        socket.broadcast.to(message.chatRoomId).emit('new-message', message);
-        //io.to(message.chatRoomId).emit('new-message', message);
+        io.to(message_data.chatRoomId).emit('new-message', saved_message);
+        console.log('Message saved successfully:', saved_message);
 
     }).catch((err) => {
       console.error('Error happened whilst saving the new message received! :', err);
+      socket.emit('message-error', { error: 'Failed to save message!'});
     });
   });
 
@@ -498,19 +517,10 @@ io.on('connection', (socket) => {
 
   // Handle request for initial messages
   socket.on('get-initial-messages', async (roomId) => {
-    try {
-      // Fetch the last 50 messages for the room from MongoDB
-      const messages = await Message.find({ chatRoomId: roomId })
-        .sort({ timestamp: -1 })
-        .limit(50)
-        .exec();
-
-      // Send the messages to the client
-      socket.emit('initial-messages', messages.reverse());
-    } catch (error) {
-      console.error('Error fetching initial messages:', error);
-    }
+    socket.emit('get-initial-messages', roomId);
   });
+
+
 
   // Handle request for room members
   socket.on('get-room-members', (roomId) => {
@@ -519,9 +529,24 @@ io.on('connection', (socket) => {
     socket.emit('room-members', ['User1', 'User2', 'User3']);
   });
 
-  socket.on('join', (roomId) => {
+  socket.on('join', async (roomId) => {
     socket.join(roomId);
     console.log(`(socket) Client joined room ${roomId}`);
+
+    try {
+
+      // Fetch the last 10 messages for the room from MongoDB
+      const messages = await Message.find({chatRoomId: roomId})
+        .sort({timestamp: -1})
+        .limit(10)
+        .exec();
+
+
+      // Send the messages to the client
+      socket.emit('initial-messages', messages.reverse());
+    } catch (error) {
+      console.error('Error fetching initial messages:', error);
+    }
   });
 
 

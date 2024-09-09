@@ -6,6 +6,9 @@ import { ChatService, Message } from '../services/chat.service';
 import { Subscription } from 'rxjs';
 import {AuthenticationService, User} from "../services/authentication.service";
 import {NavigationService} from "../services/navigation.service";
+import {SettingsService} from "../settings.service";
+import {DarkModeService} from "../services/dark-mode.service";
+
 
 
 @Component({
@@ -14,7 +17,7 @@ import {NavigationService} from "../services/navigation.service";
   imports: [CommonModule, FormsModule],
   styleUrl: './chat-room.component.css',
   template: `
-    <div class="chat-container">
+    <div class="chat-container" >
       <div class="chat-header">
 
         <!--        BACK TO DASHBOARD-->
@@ -30,8 +33,13 @@ import {NavigationService} from "../services/navigation.service";
         <!--    People In Room    -->
         <div class="chat-info">
           <!--        todo  chat room name here -->
-<!--          <h2>Room</h2>-->
+<!--          <h2></h2>-->
+<!--          <button (click)="toggleDarkMode()">-->
+<!--            {{ isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}-->
+<!--          </button>-->
         </div>
+
+
 
         <!--        VIDEO CALL BUTTON-->
         <button class="video-call-button">
@@ -47,16 +55,16 @@ import {NavigationService} from "../services/navigation.service";
 
 
       <!--       Attempt at drawing messages on screen.. -->
-      <div class="chat-messages">
+      <div class="chat-messages-container">
         <div *ngFor="let message of messages"
              [ngClass]="{'message': true, 'sent': isCurrentUser(message.senderId.username), 'received': !isCurrentUser(message.senderId.username)}">
           <div class="message-content">{{ message.msgContent }}</div>
-          <div class="message-timestamp">{{ formatTimestamp(message.timestamp) }}</div>
+          <div *ngIf="settingsService.showTimestampOnMessages" class="message-timestamp">{{ formatTimestamp(message.timestamp) }}</div>
         </div>
       </div>
 
       <div class="chat-input">
-        <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message...">
+        <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type something here...">
         <button (click)="sendMessage()">Send</button>
       </div>
     </div>
@@ -68,77 +76,79 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   // public chatRoomMembers: string[] = []; todo
   messages:     Message[] = []; // declare a Message array. This is what is used in the front end for msgs on screen
   newMessage:   string = ''; // user message in message box..
-  private messageSubscription: Subscription | undefined;
+  isDark: boolean = false;
 
+  private messageSubscription: Subscription | undefined;
+  private darkModeSubscription: Subscription | undefined;
 
   // Constructor
   constructor(
     private route:       ActivatedRoute,
+    public  settingsService: SettingsService,
     private navigationService: NavigationService,
     private chatService: ChatService,
     public authenticationService: AuthenticationService,
-  ) {
-    // this.socket = this.socketService.getSocket();
-    this.chatService.reconnect();
-
-
-
-
-  }
-
-  // this.socket.connect();
+    // private darkModeService: DarkModeService,
+  ) {}
 
 
   // Inherited function overrides
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.chatRoomId = params['id'];
-      this.chatService.joinRoom(this.chatRoomId);
-      this.loadInitialMessages();
-      // this.subscribeToNewMessages();
+
+    // setup darkmode
+    // this.darkModeSubscription = this.darkModeService.getDarkModeObservable()
+    //   .subscribe(isDark => {
+    //     this.isDark = isDark;
+    //   });
+
+    // connect to socket. (likely disconnected)
+    this.chatService.getSocket().connect();
+
+    // join room
+    this.chatRoomId = this.route.snapshot.paramMap.get('id') || '';
+    this.chatService.joinRoom(this.chatRoomId);
+
+    // load msgs
+    this.loadInitialMessages();
+
+    this.chatService.getSocket().getSocket().on('initial-messages', (messages) => {
+      this.messages = messages;
     });
-    /*
-        this.socketService.connect();
-        this.socketService.getSocket().emit('connection');
-
-        this.socketService.joinRoom(this.chatRoomId);
-        this.socketService.onMessage().subscribe(message => {
-        //   //handle incoming message
-          this.addMessage(message);
-        //   // this.sendMessage();
-        });
-        //
-        */
 
 
-
-
+    // ask from sockets
+    this.listenForNewMessages();
+    this.scrollToBottom();
   }
 
 
   ngOnDestroy(): void {
-
 
     // Check valid, before we unsubcribe
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
 
-    // Lastly, leave the room.
+    if (this.darkModeSubscription) {
+      this.darkModeSubscription.unsubscribe();
+    }
+
+    // Lastly, leave the room. & disconnect socket.
     this.chatService.leaveRoom(this.chatRoomId);
 
-  }
-
-  openChat(chatRoomId: number): void {
-    this.navigationService.navigateToChatRoom(chatRoomId);
+    this.chatService.getSocket().disconnect();
   }
 
 
-  loadMessages(): void {
+
+  loadInitialMessages(): void {
     this.chatService.getMessages(this.chatRoomId).subscribe(
       (messages) => {
-        console.log('LOADING MESSAGES!');
-        this.messages = messages;
+        this.messages = messages.filter(message => message.chatRoomId === this.chatRoomId)
+          .map(message => ({
+            ...message,
+            timestamp: new Date(message.timestamp)
+          }));
       },
       (error) => {
         console.error('Error loading messages:', error);
@@ -146,154 +156,152 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     );
   }
 
+
+
+
+
+  listenForNewMessages(): void {
+
+    this.messageSubscription = this.chatService.onNewMessage().subscribe(
+      (message: Message) => {
+        if (message.chatRoomId === this.chatRoomId) {
+          message.timestamp = new Date(message.timestamp);
+          this.messages.push(message);
+          this.scrollToBottom();
+        }
+      }
+    );
+  }
+
+
   sendMessage(): void {
+    if (!this.newMessage.trim()) {
+      return console.log('Message is empty, not sending');
+    }
+
     const currentUserId = this.authenticationService.getCurrentUserId();
     if (!currentUserId) {
       return console.error('User is not authenticated');
     }
 
-    if (!this.newMessage.trim()) {
-      return console.log('Message is empty, not sending');
+
+    try {
+      const message: Message = {
+        chatRoomId: this.chatRoomId,
+        senderId: {
+          username: currentUserId, // use id for now
+          profile_pic: '', // user.profile_pic
+        },
+        msgContent: this.newMessage,
+        timestamp: new Date(),
+        read: false
+      };
+
+      // Sends the message to the socket, which is placed into the MongoDB Server,
+      //  messages are added client-sided through listenForNewMessages()
+      this.chatService.sendMessage(message);
+
+      this.newMessage = ''; // reset input form
+
+    } catch (error) {
+
+      console.error('Error fetching current user details:', error);
+
     }
 
-    this.authenticationService.getCurrentUser().subscribe({
-      next: (currentUser: User | null) => {
-
-        if (!currentUser) {
-          console.error('Unable to fetch current user details');
-          return;
-        }
-
-        console.log('Current User:', currentUser);
-
-        // Move the code that depends on currentUser here
-        const message: Message = {
-          chatRoomId: this.chatRoomId,
-          senderId: {
-            username: currentUser.username,
-            profile_pic: currentUser.profile_pic,
-          },
-          msgContent: this.newMessage,
-          timestamp: new Date(),
-          read: false
-        };
-        this.chatService.sendMessage(message);
-
-      },
-      error: (error: any) => {
-        console.error('Error fetching current user details:', error);
-      }
-    });
-
-    // this.authenticationService.getCurrentUser().subscribe({
-    //   next: (currentUser: User | null) => {
-    //     if (!currentUser) {
-    //       console.error('Unable to fetch current user details');
-    //       return;
-    //     }
-    //
-    //
-    //
-    //     const message: Message = {
-    //       chatRoomId: this.chatRoomId,
-    //       senderId: {
-    //         username: currentUser.username,
-    //         profile_pic: currentUser.profile_pic,
-    //       },
-    //       msgContent: this.newMessage,
-    //       timestamp: new Date(),
-    //       read: false
-    //     };
-    //
-    //     console.log('Sending message:', message);
-    //
-    //     // Send message to server (save to MongoDB)
-    //     this.chatService.sendMessage(message);
-    //
-    //     // Send message to client chat room
-    //     this.addMessage(message);
-    //
-    //     // Reset the message form input form.
-    //     this.newMessage = '';
-    //
-    //
-    //
-    //   },
-    //   error: (error: any) => {
-    //     console.error('Error fetching current user details:', error);
-    //     if (error.error instanceof Error) {
-    //       console.error('Error message:', error.error.message);
-    //     } else {
-    //       console.error('Error status:', error.status);
-    //       console.error('Error body:', error.error);
-    //     }
-    //   }
-    // });
-    //
-
   }
 
-  // This is client side, add message, it doesnt do any server side stuff
-  addMessage(message: Message ) {
-    this.messages.push(message);
 
-    // Scroll to bottom of chat
-    setTimeout(() => {
-      const chatContainer = document.querySelector('.chat-messages');
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }, 0);
-  }
+  // loadInitialMessages(): void {
+  /*
+        const initial_msg_1: Message = {
+        chatRoomId: '1',
+        senderId: {
+          username: '66d00fbc67da2def6aeaac13',
+          profile_pic: ''
+        },
+        msgContent: 'Hello world!',
+        timestamp: new Date(),
+        read: false
+      };
 
-  loadInitialMessages(): void {
-    // this.chatService.getInitialRoomMessages(this.chatRoomId).subscribe(
-    //   initialMessages => this.messages = initialMessages
-    // );
-    const initial_msg_1: Message = {
-      chatRoomId: '1',
-      senderId: {
-        username: 'hardcoded',
-        profile_pic: ''
-      },
-      msgContent: 'hello world!',
-      timestamp: new Date(),
-      read: false
-    };
+      const initial_msg_2: Message = {
+        chatRoomId: '2',
+        senderId: {
+          username: 'bren',
+          profile_pic: ''
+        },
+        msgContent: 'hey !',
+        timestamp: new Date(),
+        read: false
+      };
 
-    const initial_msg_2: Message = {
-      chatRoomId: '2',
-      senderId: {
-        username: 'bren',
-        profile_pic: ''
-      },
-      msgContent: 'hey world!',
-      timestamp: new Date(),
-      read: false
-    };
-
-    this.messages = [initial_msg_1, initial_msg_2];
-  }
-
-  subscribeToNewMessages(): void {
-    this.messageSubscription = this.chatService.getMessages(this.chatRoomId).subscribe(
-      newMessages => this.messages.push(...newMessages)
-    );
-  }
+      this.messages = [initial_msg_1, initial_msg_2];
+      */
+  // }
 
 
   isCurrentUser(userId: string): boolean {
     return userId === this.authenticationService.getCurrentUserId();
   }
 
-  formatTimestamp(date: Date): string {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // For when we receive a new message, from socket..
+  private scrollToBottom() {
+    setTimeout(() => {
+      const chatContainer = document.querySelector('.chat-messages-container');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }, 0);
   }
-
 
 
   goToDashboard(): void {
     this.navigationService.navigateToDashboard();
   }
+
+  //todo setup button
+  // toggleDarkMode() {
+  //   this.darkModeService.toggleDarkMode();
+  // }
+
+  formatTimestamp(date: Date | string | number): string {
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const cases: { condition: boolean; value: string }[] = [
+      { condition: date.toDateString() === now.toDateString(), value: 'today' },
+      { condition: date.toDateString() === yesterday.toDateString(), value: 'yesterday' },
+      { condition: now.getFullYear() === date.getFullYear(), value: 'thisYear' },
+    ];
+
+    const caseValue = cases.find((c) => c.condition)?.value;
+
+    switch (caseValue) {
+      case 'today':
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      case 'yesterday':
+        return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+      case 'thisYear':
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+      default:
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+
+    }
+
+  }
+
+
 }
 

@@ -8,6 +8,8 @@ import {map} from "rxjs/operators";
 import { SettingsComponent } from '../settings/settings.component'
 import {NavigationService} from "../services/navigation.service";
 
+
+
 // interface Message { // Structure for a message
 //   chat_id:      number;  // Chat-room ID
 //   name:         string;  // Name of person
@@ -20,40 +22,13 @@ import {NavigationService} from "../services/navigation.service";
 // }
 
 
-
-//   templateUrl: './dashboard.component.html',
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, NgFor, NgIf],
   styleUrls: ['./dashboard.component.css'],
   template: `
-<!--    Old MessageApp individual users concept -->
-<!--    <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">-->
-<!--      <div class="dashboard-container">-->
-<!--        <div class="dashboard-content">-->
-<!--          <header>-->
-<!--            <h1>Messages</h1>-->
-<!--          </header>-->
 
-<!--          <ul class="message-list">-->
-<!--            <li *ngFor="let message of messages" (click)="openChat(message.chat_id)" class="message-item">-->
-<!--              <div class="avatar-container">-->
-<!--                <img [src]="message.avatar" [alt]="message.name" class="avatar">-->
-<!--                <span *ngIf="message.online" class="online-indicator"></span>-->
-<!--              </div>-->
-<!--              <div class="message-content">-->
-<!--                <h3>{{ message.name }}</h3>-->
-<!--                <p>{{ message.last_msg }}</p>-->
-<!--              </div>-->
-<!--              <div class="message-meta">-->
-<!--                <span *ngIf="message.unread" class="unread-badge">{{ message.unread }}</span>-->
-<!--              </div>-->
-<!--            </li>-->
-<!--          </ul>-->
-<!--        </div>-->
-
-<!--    </ng-container>-->
 
 <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
   <div class="dashboard-container">
@@ -133,7 +108,7 @@ export class DashboardComponent implements OnInit {
 
   loadMessages() {
     // TODO IMPLEMENT AS MONGODB REQUEST/POST SERVICE ETC.
-
+    // mydb/chatrooms, renamed to mydb/groups
 
     this.groups = [
       {

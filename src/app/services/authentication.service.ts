@@ -25,11 +25,11 @@ export interface UserSettings {
 export interface Group {
   _id: string;
   name: string;
-  chat_rooms: ChatRoom[];
+  chat_rooms: ChatRoom[] | null;
 }
 
 export interface ChatRoom {
-  _id: number;
+  _id: string;
   name: string;
 }
 
@@ -38,6 +38,8 @@ export interface User {
   username: string;
   email: string;
   profile_pic: string;
+  roles: string[];
+  groups: string[];
   // this is for client msging display (UI)
 }
 
@@ -47,7 +49,7 @@ export interface User {
 export class AuthenticationService {
   private apiLoginUrl = 'http://localhost:5000/api/login';
   private apiRegisterUserUrl = 'http://localhost:5000/api/register';
-  private apiUrl = 'http://localhost:5000/api/';
+  public  apiUrl = 'http://localhost:5000/api/';
   private authStatusSubject = new BehaviorSubject<boolean>(this.isTokenValid());
 
 
@@ -109,6 +111,7 @@ export class AuthenticationService {
     localStorage.removeItem('expires_at')
     localStorage.removeItem('auth_token');
     localStorage.removeItem('current_user_id');
+    localStorage.removeItem('dark_mode')
 
     this.currentUserIdSubject.next(null);
     this.currentUser = null;
@@ -136,7 +139,7 @@ export class AuthenticationService {
     return !this.isTokenValid();
   }
 
-  getToken(): string | null {
+  public getToken(): string | null {
     return localStorage.getItem('auth_token');
   }
 
@@ -224,8 +227,8 @@ export class AuthenticationService {
   }
 
   public getCurrentUserId() {
-    const val = this.currentUserIdValue;
-    console.log('getCurrentUserId : ', val);
+    //const val = this.currentUserIdValue;
+    //console.log('getCurrentUserId : ', val);
     return this.currentUserIdValue;
   }
 

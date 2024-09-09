@@ -5,7 +5,8 @@ const Schema = mongoose.Schema;
 const chatRoomSchema = new Schema({
 
   groupId: [{ // belongs to GroupID..
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: 'Group' // Reference to the User model
   }],
 
   members: [{

@@ -11,3 +11,5 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient()
   ]
 };
+
+module.exports.appConfig = appConfig;

@@ -8,11 +8,18 @@ const messageSchema = new Schema({
     ref: 'ChatRoom', // Reference to the ChatRoom model
     required: true,
   },
-  userId: { // Sent by user ID..
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',  // Reference to the User model
+
+  // TODO setup so it seemlessly integrates with User model
+  senderId: { // Sent by user ID..
+    type: new Schema({
+      username: { type: String, required: true },
+      profile_pic: { type: String }
+    }),
     required: true,
+    // ref: 'User',  // Reference to the User model
+
   },
+
   msgContent: {
     type: String,
     required: true,

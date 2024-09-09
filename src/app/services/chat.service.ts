@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import {Observable, toArray} from 'rxjs'
 import {SocketService} from "./socket.service";
 
-
 export interface Message {
   chatRoomId: string;
   senderId: {
@@ -10,7 +9,7 @@ export interface Message {
     profile_pic: string;
   };
   msgContent: string;
-  timestamp: Date;
+  timestamp: Date | string | number;
   read: boolean;
 
 
@@ -24,14 +23,16 @@ export class ChatService {
   constructor(private socket: SocketService) {
   }
 
-  sendMessage(/*room_id: any, */message: Message) {
-    this.socket.sendMessage(/*room_id, */message);
+  getSocket(): SocketService {
+    return this.socket;
   }
 
+  sendMessage(message: Message) {
+    this.socket.sendMessage(message);
+  }
 
   getMessages(room_id: string): Observable<Message[]> {
-    //   return this.socket.onMessage(); // todo review
-    return this.socket.onMessage().pipe(toArray());
+    return this.socket.onNewMessage().pipe(toArray());
   }
 
 
@@ -71,15 +72,9 @@ export class ChatService {
 
 
 // use in phase 2
-  getInitialRoomMessages(roomId: string): Observable<Message[]> {
-    return new Observable((observer) => {
-      this.socket.getSocket().emit('get-initial-messages', roomId);
-      this.socket.getSocket().once('initial-messages', (messages: Message[]) => {
-        observer.next(messages);
-        observer.complete();
-      });
-    });
-  }
+//   getInitialMessages(room_id: string): Observable<Message[]> {
+//     this.chatService.getMessages(this.room_id);
+//   }
 
   // This retrieves the group room participants within a group room.
   getRoomMembers(roomId: string): Observable<string[]> { // array of group member's names
@@ -93,6 +88,9 @@ export class ChatService {
   }
 
 
+  onNewMessage(): Observable<Message> {
+      return this.socket.onNewMessage();
+  }
 }
 
   // When first joining a group chat, we have to obviously intiialize the messages first,
