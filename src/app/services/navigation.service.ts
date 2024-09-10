@@ -51,12 +51,12 @@ export class NavigationService {
     this.navigateTo('/settings', 'Navigated to settings page.', 'Navigation to settings failed.');
   }
 
-  navigateToChatRoom(roomId: number ) {
+  navigateToChatRoom(roomId: number | string) {
     this.navigateTo(`/chat/${roomId}`, 'Navigated to chat room.', 'Navigation to chat room failed.');
   }
 
   navigateToAdminPanel() {
-    this.navigateTo('/admin-panel', 'Navigated to admin panel.', 'Navigation to admin panel failed.');
+    this.navigateTo('/admin', 'Navigated to admin panel.', 'Navigation to admin panel failed.');
   }
 
 

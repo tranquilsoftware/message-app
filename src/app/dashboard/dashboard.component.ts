@@ -99,7 +99,7 @@ export class DashboardComponent implements OnInit {
   // }
 
 
-  openChat(roomId: number): void {
+  openChat(roomId: number | string): void {
     // Go to /chat-[id number]
 
     this.navigationService.navigateToChatRoom(roomId)
@@ -110,30 +110,7 @@ export class DashboardComponent implements OnInit {
     // TODO IMPLEMENT AS MONGODB REQUEST/POST SERVICE ETC.
     // mydb/chatrooms, renamed to mydb/groups
 
-    this.groups = [
-      {
-        _id: '100',
-        name: 'All',
-        chat_rooms: [
-          { _id: 1, name: 'Fun Channel' },
-          { _id: 2, name: 'General Channel' }
-        ]
-      },
 
-      { _id: '102',
-        name: 'IT Group',
-        chat_rooms: [
-          { _id: 20, name: 'Tech Channel' },
-          { _id: 21, name: 'Software Channel' }
-        ] },
-
-      { _id: '103',
-        name: 'School Group',
-        chat_rooms: [
-          { _id: 30, name: 'Schoolwork Channel' },
-        ]
-      },
-    ];
 
 
   }

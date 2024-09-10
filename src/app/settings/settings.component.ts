@@ -55,6 +55,12 @@ import {NavigationService} from "../services/navigation.service";
           </label>
         </div>
 
+<!--        Admin Panel Button
+        *ngIf="userIsSuperAdmin" or if user.roles.contains('super')            -->
+        <div class="setting-item">
+          <button (click)="navigationService.navigateToAdminPanel()">Go to Admin Panel</button>
+        </div>
+
       </div>
     </main>
 
@@ -81,7 +87,7 @@ export class SettingsComponent implements OnInit {
   // TODO Implement maybe: show timestamps on messages, notifications?
   constructor(
     public authService: AuthenticationService,
-    private navigationService: NavigationService)
+    public navigationService: NavigationService)
   {}
 
   ngOnInit(): void {
