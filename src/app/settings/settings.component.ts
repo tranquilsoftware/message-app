@@ -21,7 +21,8 @@ import {NavigationService} from "../services/navigation.service";
       <div class="profile-section">
         <div class="profile-picture" (click)="onProfilePictureClick()">
           <img [src]="user.profile_pic || '/img/default_user.png'" alt="Profile Picture">
-          <div class="change-overlay">Change</div>
+          <div class="change-overlay" *ngIf="!isUploadingProfilePicture">Change</div>
+          <div class="loading-overlay" *ngIf="isUploadingProfilePicture">Uploading...</div>
         </div>
         <h2>{{ user.username }}</h2>
         <p>{{ user.email }}</p>
@@ -83,6 +84,8 @@ export class SettingsComponent implements OnInit {
     dark_mode:      false,  // TODO: implement dark mode (changes to css styling)
     notifications:  true    // todo: this is a placeholder for notifications to  be sent the the user, in some form of wahy.;
   }
+
+  isUploadingProfilePicture: boolean = false;
 
   // TODO Implement maybe: show timestamps on messages, notifications?
   constructor(
@@ -155,8 +158,19 @@ export class SettingsComponent implements OnInit {
 
   // sends uploaded pic to the authentication service, which tells server.js to update.
   uploadProfilePicture(file: File): void {
-    this.authService.uploadProfilePicture(file);
-  }
+    this.isUploadingProfilePicture = true;
+    this.authService.uploadProfilePicture(file).subscribe({
+      next: (response: any) => {
+
+        this.isUploadingProfilePicture = false;
+        this.user.profile_pic = response.url; // client sided only request
+
+        console.log('The profile pic should be updated!');
+        },
+      error: (error) => {
+        this.isUploadingProfilePicture = false;
+      }
+    });  }
 
 
 }

@@ -184,23 +184,26 @@ export class AuthenticationService {
 
 
 //TODO fixup -- MongoDB To accept pp
-  uploadProfilePicture(file: File): void {
+  uploadProfilePicture(file: File): Observable<any> {
     const formData = new FormData();
-    formData.append('profilePicture', file);
+    formData.append('profile_picture', file);
 
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${this.getToken()}` // Replace with your method to get the token
     });
 
 
-    this.http.post(`${this.apiUrl}user/profile-picture`, formData, { headers }).subscribe(
-      (response: any) => {
-        // this.user.profile_pic = response.url;
-        console.log('Profile picture was uploaded successfully!');
-      },
-      (error) => {
-        console.error('Oh no! Something went wrong when uploading profile picture!', error);
-      }
+    return this.http.post(`${this.apiUrl}user/profile-picture`, formData, { headers }).pipe(
+      tap((response:any) => {
+        console.log('Profile picture was uploaded successfully! :D.\n Response URL: ', response.url);
+
+        // Make UserSettingRoutes.js handle the server-side stuff..
+      }),
+
+      catchError((error) => {
+        console.error('Oh dear! Something went wrong when uploading profile picture!', error);
+        return throwError(() => new Error('Profile picture upload failed'));
+      })
     );
   }
 

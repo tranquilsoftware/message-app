@@ -4,7 +4,7 @@ const Message = require('../models/Message');
 const ChatRoom = require("../models/ChatRoom");
 
 // Endpoint to GET (load) messages for a specific chat room
-router.get('/api/messages/:chatRoomId', async (req, res) => {
+router.get('/:chatRoomId', async (req, res) => {
   try {
 
     const chatRoomId = req.params.chatRoomId;
@@ -19,7 +19,7 @@ router.get('/api/messages/:chatRoomId', async (req, res) => {
 
 
 // Send a new message
-router.post('/api/messages', async (req, res) => {
+router.post('/', async (req, res) => {
   const { chatRoomId, userId, msgContent } = req.body;
 
   const newMessage = new Message({

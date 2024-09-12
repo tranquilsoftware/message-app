@@ -147,3 +147,11 @@ make the message only appear if the messages chatroom id, is the chatroom were i
 
 - scrollToBottom() func not working
 - tidy message.js
+
+
+12/09
+
+so uploading profile picture works, HOWEVER, when u upload a new pic, the server must be restarted.
+
+TODO BUG
+The file is on the local system (server), however its returning a 404, its as if the server needs to be refreshed, or something.
