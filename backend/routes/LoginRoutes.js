@@ -33,17 +33,13 @@ router.post('/', async(req, res) => {
 
       console.log('Generated token:', token);
 
-      return res.status(200)
-        .json({
-          token:  token,
-          // userId: user._id
-        });
+
       // Respond with the token, expiration, and userId (CORRECT)
-      // return res.status(200).json({
-      //   token,
-      //   expiresIn: 3600, // Example expiration time in seconds
-      //   userId: user._id // Include the userId in the response
-      // });
+      return res.status(200).json({
+        token,
+        expiresIn: 3600, // Example expiration time in seconds
+        userId: user._id // Include the userId in the response
+      });
 
       }
 
@@ -57,20 +53,6 @@ router.post('/', async(req, res) => {
     console.log('user._id: ', user._id);
     console.log('user.username', user.username);
     console.log('user.email', user.email);
-
-
-
-    // try {
-    //   const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    //   console.log('Token is valid:', decoded);
-    //
-    //
-    //   const decodedToken = jwt.decode(token, { complete: true });
-    //   console.log('\nDecoded token:', decodedToken);
-    // } catch (err) {
-    //   console.error('(server) Token verification failed:', err);
-    // }
-
 
 
 

@@ -36,7 +36,7 @@ export class NavigationService {
 
   // NAVIGATION FUNCTIONS..
   navigateToDashboard() {
-    this.navigateTo('/dashboard', 'You have logged in successfully.', 'Navigation to dashboard failed.');
+    this.navigateTo('/dashboard', 'Navigated to dashboard.', 'Navigation to dashboard failed.');
   }
 
   navigateToLogin() {
@@ -52,7 +52,8 @@ export class NavigationService {
   }
 
   navigateToChatRoom(roomId: number | string) {
-    this.navigateTo(`/chat/${roomId}`, 'Navigated to chat room.', 'Navigation to chat room failed.');
+
+    this.navigateTo(`/chat/${roomId}`, `Navigated to chat room ID: ${roomId}`, 'Navigation to chat room failed.');
   }
 
   navigateToAdminPanel() {

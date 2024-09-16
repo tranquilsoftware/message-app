@@ -22,15 +22,28 @@ export interface UserSettings {
   notifications: boolean;
 }
 
+// this is for client msging display (UI)
+
 export interface Group {
   _id: string;
+  groupId: string;  // changed from _id
   name: string;
-  chat_rooms: ChatRoom[] | null;
+  chatrooms: ChatRoom[] | null;
+  isExpanded: boolean; // Client sided, if user wants to open group this is true.
+
 }
 
+
+// Also known as; Channels.
 export interface ChatRoom {
   _id: string;
-  name: string;
+  groupId: string;  // (BELONGS TO id of GROUP )
+  chatRoomName: string; // the unique channel/chatroom name
+  chatRoomId: string;
+  createdAt: string;
+  // visible: boolean; // Client sided used for nice transitions .
+  // members: string[];
+  // lastMessage: string | null;
 }
 
 export interface User {
@@ -40,7 +53,6 @@ export interface User {
   profile_pic: string;
   roles: string[];
   groups: string[];
-  // this is for client msging display (UI)
 }
 
 @Injectable({
@@ -66,8 +78,9 @@ export class AuthenticationService {
   constructor(private http: HttpClient, private router: Router) {
     this.checkAuthStatus();
 
+    const localisedUserId = localStorage.getItem('current_user_id');
 
-    this.currentUserIdSubject = new BehaviorSubject<string | null>(localStorage.getItem('current_user_id'));
+    this.currentUserIdSubject = new BehaviorSubject<string | null>(localisedUserId);
     this.currentUserId = this.currentUserIdSubject.asObservable();
   }
 
@@ -76,7 +89,7 @@ export class AuthenticationService {
       .pipe(
         tap(response => {
           this.setSession(response);
-          this.setCurrentUserId(response.userId); // Saves the user ID (_id), and current_user_id to localStorage
+          console.log('response', response);
 
         }),
         catchError(this.handleError<AuthResponse>('login'))
@@ -89,7 +102,6 @@ export class AuthenticationService {
       .pipe(
         tap(response => {
           this.setSession(response);
-          this.setCurrentUserId(response.userId); // save the user ID (_id in mongoDB)
 
         }),
         catchError(this.handleError<AuthResponse>('registerUser'))
@@ -99,15 +111,21 @@ export class AuthenticationService {
 
 
   private setSession(authResult: AuthResponse): void {
-    const expiresAt = new Date().getTime() + authResult.expiresIn * 1000;
+    const token = authResult.token;
+    const decodedToken = this.jwtDecode(token);
+    const expiresAt = new Date().getTime() + (authResult.expiresIn * 1000);
 
-    localStorage.setItem('auth_token', authResult.token);
+    localStorage.setItem('auth_token', decodedToken.token);
     localStorage.setItem('expires_at', JSON.stringify(expiresAt));
     this.authStatusSubject.next(true);
+
+    const userId = decodedToken.userId;
+    this.setCurrentUserId(userId);// save the user ID (_id in mongoDB)
+
   }
 
   logout() {
-    // clear all relevants
+    // clear all relevant attributes
     localStorage.removeItem('expires_at')
     localStorage.removeItem('auth_token');
     localStorage.removeItem('current_user_id');
@@ -229,15 +247,42 @@ export class AuthenticationService {
     return this.currentUserIdSubject.value;
   }
 
-  public getCurrentUserId() {
-    //const val = this.currentUserIdValue;
-    //console.log('getCurrentUserId : ', val);
-    return this.currentUserIdValue;
+  // public getCurrentUserId() {
+  //   const userId = this.currentUserIdValue;
+  //   console.log('(getCurrentUserId) - User ID:', userId);
+  //   return userId;
+  // }
+  public getCurrentUserId(): string | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+  
+    try {
+      const decodedToken = this.jwtDecode(token);
+      console.log('(getCurrentUserId) - Decoded Token:', decodedToken);
+      return decodedToken.userId;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
   }
+  
+  private jwtDecode(token: string): any {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  
+    return JSON.parse(jsonPayload);
+  }
+
 
   // After successful login, this method is called.
   setCurrentUserId(userId: string): void {
     this.currentUserIdSubject.next(userId);
+    console.log('(setCurrentUserId) - User ID:', userId);
     localStorage.setItem('current_user_id', userId);
   }
 

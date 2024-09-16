@@ -53,37 +53,88 @@ p {
   color:      #65676b;
 }
 
-.message-list {
-  list-style-type:  none;
-  padding:          0;
-  padding-bottom: 128px;
-  margin:           0;
-}
 
-.message-item {
-  display:          flex;
-  align-items:      center;
-  padding:          0.75rem;
-  background-color: white;
-  border-radius:    8px;
-  margin-bottom:    1.5rem;
-  cursor:           pointer;
-  transition:       background-color 0.3s ease;
-}
 
-.message-item:hover {
-  background-color: #f0f2f5;
-}
 
-/* channels next to group */
-.message-item ul {
-  list-style: none;
+/* Groups & Channels */
+.group-list {
+  list-style-type: none;
   padding: 0;
 }
 
-.message-item ul li {
-  padding-left: 20px;
+
+.group-header {
+  background-color: #fdfdfd;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  transition: background-color 0.3s;
+  border:           none;
+  border-radius:    4px;
 }
+
+.group-header:hover {
+  background-color: #f0f2f5;
+}
+
+.group-name {
+  margin-left: 10px;
+  font-weight: bold;
+  color: #050505;
+}
+
+.group-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  border: 1px solid #e4e6eb;
+}
+
+.group-item.expanded .channel-list {
+  /*max-height: 500px;*/
+  transition: max-height 0.5s ease-in-out;
+  overflow: visible;
+}
+
+.channel-item {
+  padding: 8px 10px 8px 34px;
+  cursor: pointer;
+  transition: background-color 0.3s, opacity 0.3s, transform 0.3s;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.channel-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.channel-list {
+  /*max-height: 0;*/
+  background-color: #bbd5ff;
+  max-height: 512px;
+  padding: 4px;
+  overflow: visible;
+  transition: max-height 0.5s ease-out;
+  list-style-type: none;  /* Remove dot point */
+}
+
+.channel:hover {
+  background-color: #f0f2f5;
+}
+
+.arrow {
+  transition: transform 0.3s;
+}
+.rotate {
+  transform: rotate(90deg);
+}
+
+
+
+
+/* Avatar STyling (old, but probably integrate when groups/channels have avatars. */
 
 .avatar-container {
   position:       relative;

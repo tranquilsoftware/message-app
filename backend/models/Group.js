@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const groupSchema = new Schema({
-  _id: { // ID of group
+  groupId: { // ID of group
     type: String,
     required: true,
     unique: true
@@ -13,9 +13,12 @@ const groupSchema = new Schema({
     required: true,
     unique: true
   },
-  chatRooms: [{
-    type: Schema.Types.ObjectId,
-    ref: 'ChatRoom' // Reference to the ChatRoom model
+
+  chatrooms: [{
+    // type: Schema.Types.ObjectId,
+    type: Number,
+    required: false,
+    // ref: 'ChatRoom' // Reference to the ChatRoom model
   }],
 
   createdAt: {

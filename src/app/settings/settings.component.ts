@@ -20,7 +20,7 @@ import {NavigationService} from "../services/navigation.service";
     <!--  Profile picture -->
       <div class="profile-section">
         <div class="profile-picture" (click)="onProfilePictureClick()">
-          <img [src]="user.profile_pic || '/img/default_user.png'" alt="Profile Picture">
+          <img [src]="user.profile_pic || '/img/default_user.png'" alt="....... Loading...">
           <div class="change-overlay" *ngIf="!isUploadingProfilePicture">Change</div>
           <div class="loading-overlay" *ngIf="isUploadingProfilePicture">Uploading...</div>
         </div>

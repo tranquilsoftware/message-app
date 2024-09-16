@@ -16,7 +16,7 @@ const messageSchema = new Schema({
       profile_pic: { type: String }
     }),
     required: true,
-    // ref: 'User',  // Reference to the User model
+    ref: 'User',  // Reference to the User model
 
   },
 

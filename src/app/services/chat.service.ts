@@ -87,6 +87,16 @@ export class ChatService {
     });
   }
 
+  getChatRoomName(roomId: string): Observable<string> {
+    return new Observable((observer) => {
+      this.socket.getSocket().emit('get-chat-room-name', roomId);
+      this.socket.getSocket().once('chat-room-name', (name: string) => {
+        observer.next(name);
+        observer.complete();
+      });
+    });
+  }
+
 
   onNewMessage(): Observable<Message> {
       return this.socket.onNewMessage();

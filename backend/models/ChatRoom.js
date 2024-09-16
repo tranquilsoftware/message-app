@@ -4,20 +4,33 @@ const Schema = mongoose.Schema;
 // schema for a chat room..
 const chatRoomSchema = new Schema({
 
-  groupId: [{ // belongs to GroupID..
-    type: Schema.Types.ObjectId,
-    ref: 'Group' // Reference to the User model
-  }],
+// belongs to GroupID..
+  groupId: {
+    type: String,
+    // ref: 'Group', // Reference to the Group model
+    required: true
+  },
 
-  members: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User' // Reference to the User model
-  }],
+  chatRoomName: {
+    type: String,
+    required: true
+  },
 
-  lastMessage: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Message' // Reference to the Message model A
-  }],
+  chatRoomId: { // LETS NOT USE _id for Identifying the chatroom, instead we use chatRoomId
+    type: String,
+    required: true,
+    unique: true
+  },
+
+  // members: [{
+  //   type: String,
+  //   // ref: 'User' // Reference to the User model
+  // }],
+
+  // lastMessage: [{
+  //   type: Schema.Types.ObjectId,
+  //   // ref: 'Message' // Reference to the Message model A
+  // }],
 
   createdAt: {
     type: Date,

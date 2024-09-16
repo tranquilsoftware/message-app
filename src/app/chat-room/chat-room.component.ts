@@ -33,7 +33,7 @@ import {DarkModeService} from "../services/dark-mode.service";
         <!--    People In Room    -->
         <div class="chat-info">
           <!--        todo  chat room name here -->
-<!--          <h2></h2>-->
+         <h2>{{ chatRoomName }}</h2>
 <!--          <button (click)="toggleDarkMode()">-->
 <!--            {{ isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}-->
 <!--          </button>-->
@@ -77,6 +77,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   messages:     Message[] = []; // declare a Message array. This is what is used in the front end for msgs on screen
   newMessage:   string = ''; // user message in message box..
   isDark: boolean = false;
+  chatRoomName: string = '';
 
   private messageSubscription: Subscription | undefined;
   private darkModeSubscription: Subscription | undefined;
@@ -107,6 +108,9 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     // join room
     this.chatRoomId = this.route.snapshot.paramMap.get('id') || '';
     this.chatService.joinRoom(this.chatRoomId);
+
+    // get chat room name
+    this.getChatRoomName();
 
     // load msgs
     this.loadInitialMessages();
@@ -211,34 +215,11 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   }
 
-
-  // loadInitialMessages(): void {
-  /*
-        const initial_msg_1: Message = {
-        chatRoomId: '1',
-        senderId: {
-          username: '66d00fbc67da2def6aeaac13',
-          profile_pic: ''
-        },
-        msgContent: 'Hello world!',
-        timestamp: new Date(),
-        read: false
-      };
-
-      const initial_msg_2: Message = {
-        chatRoomId: '2',
-        senderId: {
-          username: 'bren',
-          profile_pic: ''
-        },
-        msgContent: 'hey !',
-        timestamp: new Date(),
-        read: false
-      };
-
-      this.messages = [initial_msg_1, initial_msg_2];
-      */
-  // }
+  getChatRoomName(): void {
+    this.chatService.getChatRoomName(this.chatRoomId).subscribe((chatRoomName) => {
+      this.chatRoomName = chatRoomName;
+    });
+  }
 
 
   isCurrentUser(userId: string): boolean {

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');  // For requesting information from MongoDB
 const bodyParser = require('body-parser');
 const cors = require('cors');  // for security during requests
-const jwt = require('jsonwebtoken');  // For generating and verifying JWT tokens
 
 
 const express = require('express');  // Server
@@ -67,22 +66,23 @@ const messagesRoutes = require('./routes/MessagesRoutes');
 const registerRoutes = require('./routes/RegisterRoutes');
 const loginRoutes = require('./routes/LoginRoutes');
 const userSettingsRoutes = require('./routes/UserSettingsRoutes');
-
+const groupRoutes = require('./routes/GroupRoutes');
+const chatRoomRoutes = require('./routes/ChatRoomRoutes');
+const usersRoutes = require('./routes/UsersRoutes');
 
 // Use the routes we've defined:
 app.use('/api/messages', messagesRoutes);
 app.use('/api/register', registerRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/user', userSettingsRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/chatrooms', chatRoomRoutes);
+app.use('/api/users', usersRoutes);
 
-// Apply middleware to all routes that require authentication
-// app.use('/api/user/settings', authenticateToken);
-// app.use('/api/user/current', authenticateToken);
 
 
 // Allow serving (GET requests) from users, to the following directories below.
 app.use(express.static(path.join(__dirname, 'public')));
-// app.use('/user_uploads', express.static(path.join(__dirname, 'public', 'user_uploads')));
 
 
 
@@ -197,10 +197,19 @@ io.on('connection', (socket) => {
 
 
 
+
+
+
   // Handle request for initial messages
   socket.on('get-initial-messages', async (roomId) => {
     socket.emit('get-initial-messages', roomId);
   });
+
+
+
+
+
+
 
 
 
@@ -211,6 +220,11 @@ io.on('connection', (socket) => {
     socket.emit('room-members', ['User1', 'User2', 'User3']);
   });
 
+
+
+
+
+  // JOIN channelId/chatroomId
   socket.on('join', async (roomId) => {
     socket.join(roomId);
     console.log(`(socket) Client joined room ${roomId}`);
@@ -223,18 +237,39 @@ io.on('connection', (socket) => {
         .limit(10)
         .exec();
 
-
-      // Send the messages to the client
+      // Send the messages to the client, messages need to be reversed to look correct
       socket.emit('initial-messages', messages.reverse());
+
     } catch (error) {
       console.error('Error fetching initial messages:', error);
     }
   });
 
 
+    // Handle request for chat room name
+    socket.on('get-chat-room-name', async (roomId) => {
+      
+      try {
+        const chatRoom = await ChatRoom.findOne({ chatRoomId: roomId });
+        if (chatRoom) {
+          socket.emit('chat-room-name', chatRoom.chatRoomName);
+          console.log('(socket) Chat room name:', chatRoom.chatRoomName);
+        } else {
+          socket.emit('chat-room-name', 'Unknown Room');
+        }
+      } catch (error) {
+        console.error('Error fetching chat room name:', error);
+        socket.emit('chat-room-name', 'Error');
+      }
+    });
+
+
+  // DISCONNECT
   socket.on('disconnect', () => {
     console.log('(socket) Client disconnected');
   });
+
+
 });
 
 

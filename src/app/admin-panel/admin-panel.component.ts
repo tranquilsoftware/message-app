@@ -41,8 +41,8 @@ import { catchError } from 'rxjs/operators';
         <button (click)="removeGroup(group)">Remove Group</button>
         <h4>Chat Rooms</h4>
         <ul>
-          <li *ngFor="let chatRoom of group.chat_rooms">
-            {{ chatRoom.name }}
+          <li *ngFor="let chatRoom of group.chatrooms">
+            {{ chatRoom.chatRoomName }}
             <button (click)="removeChatRoom(group, chatRoom)">Remove Chat Room</button>
           </li>
         </ul>
@@ -202,12 +202,17 @@ export class AdminPanelComponent implements OnInit {
     const chatRoomName = prompt('Enter chat room name:');
     if (chatRoomName) {
       this.postWithAuth<ChatRoom>(`groups/${group._id}/chat-rooms`, { name: chatRoomName }).subscribe(
-        (newChatRoom) => {
-          if (!group.chat_rooms) {
-            group.chat_rooms = [];
+        (newChatRoom: ChatRoom) => {
+
+          // If it doesnt exist yet, define an empty array then!
+          if (!group.chatrooms) {
+            group.chatrooms = [];
           }
-          group.chat_rooms.push(newChatRoom);
-          console.log(`Chat room ${newChatRoom.name} created in group ${group.name}`);
+          group.chatrooms.push({
+            ...newChatRoom
+          });
+          console.log(`Chat room ${newChatRoom.chatRoomName} created in group ${group.name}`);
+
         },
         (error) => console.error('Error creating chat room:', error)
       );
@@ -217,11 +222,11 @@ export class AdminPanelComponent implements OnInit {
   removeChatRoom(group: Group, chatRoom: ChatRoom) {
     this.deleteWithAuth(`groups/${group._id}/chat-rooms/${chatRoom._id}`).subscribe(
       () => {
-        if (group.chat_rooms && Array.isArray(group.chat_rooms)) {
-          group.chat_rooms = group.chat_rooms.filter((c: ChatRoom) => c._id !== chatRoom._id);
-          console.log(`Chat room ${chatRoom.name} removed from group ${group.name}`);
+        if (group.chatrooms && Array.isArray(group.chatrooms)) {
+          group.chatrooms = group.chatrooms.filter((c: ChatRoom) => c._id !== chatRoom._id);
+          console.log(`Chat room ${chatRoom.chatRoomName} removed from group ${group.name}`);
         } else {
-          group.chat_rooms = [];
+          group.chatrooms = [];
         }
       },
       (error) => console.error('Error removing chat room:', error)

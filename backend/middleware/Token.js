@@ -40,7 +40,6 @@ const authenticateToken = (req, res, next) => {
   }
 }
 
-
 // Generate a token based on _id, username, email
 const generateToken = (user) => {
   console.log('GENERATING TOKEN WITH KEY: [', SECRET_KEY, ']');
@@ -58,4 +57,15 @@ const generateToken = (user) => {
   return jwt.sign(payload, SECRET_KEY, { expiresIn: '24h' });
 };
 
-module.exports = { authenticateToken, generateToken };
+
+/** used for getting the user ID from the token, and setSession() in authentication.service.ts */
+const jwtDecode = (token) => {
+  try {
+    return jwt.verify(token, SECRET_KEY);
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+
+module.exports = { authenticateToken, generateToken, jwtDecode };

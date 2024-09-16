@@ -77,14 +77,8 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// for comparing WITHOUT bcrypt // for testing development (raw string passowrds) like super, 123
-//   I will not use this throughout the further development of th eproject as I want to gain experience with real time databases whilst incorporating sing bcrypt
 
-// userSchema.methods.comparePassword = async function(parameterizedPass) {
-//   let m_result = parameterizedPass === this.password;
-//   console.log('login result:', m_result);
-//   return m_result;
-// }
+
 
 
 
