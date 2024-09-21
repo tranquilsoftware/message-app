@@ -48,13 +48,18 @@ const userSchema = new Schema({
 
   roles: [{
     type: String,
-    enum: ['super', 'group-admin', 'user'],  // Group-Admin isnt initilized here, it is given group-admin from what the group channels backend ADMIN is.
+    enum: ['super', 'groupAdmin', 'user'],  
   }],
 
   groups: [{
     type: String,
     required: true,
     default: 1 // Refering to Group ID 1.. (General Group)
+  }],
+
+  adminInGroups: [{
+    type: String,
+    required: false,
   }],
 
 });

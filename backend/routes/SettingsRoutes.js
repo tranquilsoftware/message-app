@@ -12,7 +12,7 @@ const fs = require("fs");  // For handling file uploads (profile pictures)
 // USER SETTINGS..
 
 // GET  user settings..
-router.get('/settings', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('req.userData:', req.userData);
 
@@ -46,7 +46,7 @@ router.get('/settings', authenticateToken, async (req, res) => {
 
 
 // PUT/Update a user's setting..
-router.put('/settings/:setting', authenticateToken, async (req, res) => {
+router.put('/:setting', authenticateToken, async (req, res) => {
   const setting = req.params.setting;
   const value = req.body.value;
 
@@ -173,7 +173,6 @@ router.post('/profile-picture', authenticateToken, upload.single('profile_pictur
       return res.status(404)
         .json({ message: 'User not found' });
     }
-
 
 
     // E.g. response:   profile_pic: '/public/user_uploads/profile_picture-215770044.png',

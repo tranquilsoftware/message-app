@@ -26,21 +26,25 @@ const config: SocketIoConfig = {
 // Import other components as needed
 
 @NgModule({
-  declarations: [
-    AdminPanelComponent,
+  declarations: [    
+
   ],
   imports: [
+    AppComponent,
     BrowserModule,
     RouterModule.forRoot(routes),  AppRoutingModule, // setup routing..
-    AppComponent,
     LoginComponent,
     DashboardComponent,
     SettingsComponent,
     ChatRoomComponent,
+    AdminPanelComponent,
     SocketIoModule.forRoot(config) // setup socket
   ],
 
-  providers: [{SocketService, provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true}, ],
+  providers: [
+    SocketService,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
   bootstrap: []
 })
 export class AppModule { }

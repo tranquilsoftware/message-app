@@ -45,4 +45,90 @@ router.get('/group/:groupId', async (req, res) => {
   }
 });
 
+
+
+// ADMIN PANEL ROUTES
+// GET all chatrooms
+router.get('/chatrooms', async (req, res) => {
+  try {
+    const chatrooms = await ChatRoom.find();
+    res.json(chatrooms);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST a new chatroom
+router.post('/chatrooms', async (req, res) => {
+  const chatroom = new ChatRoom({
+    name: req.body.name,
+    groupId: req.body.groupId
+  });
+
+  try {
+    const newChatroom = await chatroom.save();
+    res.status(201).json(newChatroom);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// PUT (Edit) a specific chatroom
+router.put('/chatrooms/:id', async (req, res) => {
+  try {
+    const updatedChatroom = await ChatRoom.findByIdAndUpdate(
+      req.params.id,
+      { $set: { name: req.body.name } },
+      { new: true }
+    );
+
+    if (!updatedChatroom) {
+      return res.status(404).json({ message: 'Chatroom not found' });
+    }
+
+    res.json(updatedChatroom);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// DELETE a specific chatroom
+router.delete('/chatrooms/:id', async (req, res) => {
+  try {
+    const deletedChatroom = await ChatRoom.findByIdAndDelete(req.params.id);
+
+    if (!deletedChatroom) {
+      return res.status(404).json({ message: 'Chatroom not found' });
+    }
+
+    res.json({ message: 'Chatroom deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Create a new chat room within a group
+router.post('/groups/:groupId/chat-rooms', async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { name } = req.body;
+
+    const newChatRoom = new ChatRoom({
+      chatRoomName: name,
+      groupId: groupId,
+      chatRoomId: Math.random().toString(36).substr(2, 9) // Generate a unique ID
+    });
+
+    const savedChatRoom = await newChatRoom.save();
+
+    // Update the group to include the new chat room
+    await Group.findByIdAndUpdate(groupId, { $push: { chatrooms: savedChatRoom._id } });
+
+    res.status(201).json(savedChatRoom);
+  } catch (error) {
+    console.error('Error creating chat room:', error);
+    res.status(500).json({ message: 'Error creating chat room' });
+  }
+});
+
 module.exports = router;

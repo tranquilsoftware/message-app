@@ -53,6 +53,7 @@ export interface User {
   profile_pic: string;
   roles: string[];
   groups: string[];
+  adminInGroups: string[];
 }
 
 @Injectable({
@@ -188,7 +189,7 @@ export class AuthenticationService {
   getUserSettings(): Observable<UserSettings> {
     const token = this.getToken();
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.get<UserSettings>('http://localhost:5000/api/user/settings', { headers });
+    return this.http.get<UserSettings>('http://localhost:5000/api/settings', { headers });
   }
 
   updateUserSetting(setting: string, value: any): Observable<any> {
@@ -197,7 +198,7 @@ export class AuthenticationService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     // http put request
-    return this.http.put(`${this.apiUrl}user/settings/${setting}`, { value }, { headers });
+    return this.http.put(`${this.apiUrl}settings/${setting}`, { value }, { headers });
   }
 
 
@@ -257,7 +258,7 @@ export class AuthenticationService {
     if (!token) {
       return null;
     }
-  
+
     try {
       const decodedToken = this.jwtDecode(token);
       console.log('(getCurrentUserId) - Decoded Token:', decodedToken);
@@ -267,14 +268,14 @@ export class AuthenticationService {
       return null;
     }
   }
-  
+
   private jwtDecode(token: string): any {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
-  
+
     return JSON.parse(jsonPayload);
   }
 
@@ -302,7 +303,8 @@ export class AuthenticationService {
       );
     }
 
-    return this.http.get<User>(`${this.apiUrl}user/current`, {
+    // Go to
+    return this.http.get<User>(`${this.apiUrl}settings/current`, {
       headers: new HttpHeaders().set('Authorization', `Bearer ${token}`)
     });
   }

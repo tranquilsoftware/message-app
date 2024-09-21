@@ -65,7 +65,7 @@ const { authenticateToken } = require('../backend/middleware/Token');
 const messagesRoutes = require('./routes/MessagesRoutes');
 const registerRoutes = require('./routes/RegisterRoutes');
 const loginRoutes = require('./routes/LoginRoutes');
-const userSettingsRoutes = require('./routes/UserSettingsRoutes');
+const settingsRoutes = require('./routes/SettingsRoutes');
 const groupRoutes = require('./routes/GroupRoutes');
 const chatRoomRoutes = require('./routes/ChatRoomRoutes');
 const usersRoutes = require('./routes/UsersRoutes');
@@ -74,7 +74,7 @@ const usersRoutes = require('./routes/UsersRoutes');
 app.use('/api/messages', messagesRoutes);
 app.use('/api/register', registerRoutes);
 app.use('/api/login', loginRoutes);
-app.use('/api/user', userSettingsRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/chatrooms', chatRoomRoutes);
 app.use('/api/users', usersRoutes);
@@ -248,7 +248,7 @@ io.on('connection', (socket) => {
 
     // Handle request for chat room name
     socket.on('get-chat-room-name', async (roomId) => {
-      
+
       try {
         const chatRoom = await ChatRoom.findOne({ chatRoomId: roomId });
         if (chatRoom) {
