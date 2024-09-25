@@ -1,1 +1,101 @@
-<p>admin-panel works!</p>
+<div class="admin-panel">
+  <!-- <h2>Admin Panel</h2> -->
+
+  <!-- Super Admin View -->
+  <div *ngIf="isSuperAdmin" class="card">
+    <h3>Super Admin Menu</h3>
+    <div class="button-group">
+      <button class="btn admin-button" (click)="showUsers()">Manage Users</button>
+      <button class="btn admin-button" (click)="showGroups()">Manage Groups</button>
+    </div>
+  </div>
+
+  <!-- Group Admin View -->
+  <div *ngIf="isGroupAdmin && !isSuperAdmin" class="card">
+    <h3>Your Admin Groups</h3>
+    <ul class="group-list">
+      <li *ngFor="let group of adminGroups" class="group-item">
+        {{ group.name }}
+        <button (click)="editGroup(group)">Edit</button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- User Management Panel (for Super Admin) -->
+  <div *ngIf="isSuperAdmin && showingUsers" class="card">
+    <h3>Manage Users</h3>
+    <ul class="user-list">
+      <li *ngFor="let user of users" class="user-item">
+        <div class="user-info">
+          <img [src]="user.profile_pic || 'img/default_user.png'" alt="Profile picture" class="user-avatar">
+          <div class="user-details">
+            <span class="user-name">{{ user.username }}</span>
+            <span class="user-email">{{ user.email }}</span>
+          </div>
+        </div>
+        <div class="user-actions">
+          <button class="btn btn-promote-group" (click)="promoteToGroupAdmin(user)">Promote to Group Admin</button>
+          <button class="btn btn-promote-super" (click)="promoteToSuperAdmin(user)">Promote to Super Admin</button>
+          <button class="btn btn-remove-user" (click)="removeUser(user)">Remove User</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Group Management Panel (for Super Admin) -->
+  <div *ngIf="isSuperAdmin && showingGroups" class="card group-edit-panel">
+    <h3>Manage All Groups</h3>
+    <button class="btn btn-add"  (click)="addGroup()">Add Group</button>
+    <ul class="group-list">
+      <li *ngFor="let group of groups" class="group-item">
+        <span class="group-name">{{ group.name }}</span>
+        <div class="button-container">
+          <button class="btn btn-edit" (click)="editGroup(group)">Edit</button>
+          <button class="btn btn-remove" (click)="removeGroup(group)">Remove</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Group Editing Panel -->
+  <div *ngIf="selectedGroup" class="card group-edit-panel">
+    <h3>{{ selectedGroup.groupId ? 'Edit' : 'Add' }} Group: {{ selectedGroup.name }}</h3>
+    <form (ngSubmit)="updateGroup()">
+      <div>
+        <h4 for="groupName">Group Name:</h4>
+        <input id="groupName" [(ngModel)]="selectedGroup.name" name="groupName" required>
+      </div>
+
+      <h4>Chatrooms</h4>
+      <ul class="chatroom-list">
+        <li *ngFor="let chatroom of selectedGroup.chatrooms" class="chatroom-item"> 
+
+          <span class="chatroom-name">{{ chatroom.chatRoomName }}</span>
+
+          <button type="button"  class="btn btn-edit"   (click)="editChatroom(chatroom)">  Edit</button>
+          <button type="button"  class="btn btn-remove" (click)="removeChatroom(chatroom)">Remove</button>
+        </li>
+      </ul>
+      <button type="button"    class="btn btn-add"    (click)="addChatroom()">Add Chatroom</button>
+
+      <div class="form-actions">
+        <button type="submit"  class="btn btn-save">Save Changes</button>
+        <button type="button"  class="btn btn-cancel" (click)="cancelEdit()">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Chatroom Editing Panel -->
+  <div *ngIf="selectedChatroom" class="card chatroom-edit-panel">
+    <h3>{{ selectedChatroom.chatRoomId ? 'Edit' : 'Add' }} Chatroom</h3>
+    <form (ngSubmit)="updateChatroom()">
+      <div>
+        <label for="chatroomName">Chatroom Name:</label>
+        <input id="chatroomName" [(ngModel)]="selectedChatroom.chatRoomName" name="chatroomName" required>
+      </div>
+      <button type="submit">Save Chatroom</button>
+      <button type="button" (click)="cancelChatroomEdit()">Cancel</button>
+    </form>
+  </div>
+</div>

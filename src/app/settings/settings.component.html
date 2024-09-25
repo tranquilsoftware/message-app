@@ -1,0 +1,62 @@
+<div class="settings-dashboard">
+    <header>
+      <h1>Settings</h1>
+    </header>
+
+    <main>
+    <!--  Profile picture -->
+      <div class="profile-section">
+        <div class="profile-picture" (click)="onProfilePictureClick()">
+          <img [src]="user.profile_pic || '/img/default_user.png'" alt="....... Loading...">
+          <div class="change-overlay" *ngIf="!isUploadingProfilePicture">Change</div>
+          <div class="loading-overlay" *ngIf="isUploadingProfilePicture">Uploading...</div>
+        </div>
+        <h2>{{ user.username }}</h2>
+        <p>{{ user.email }}</p>
+      </div>
+
+      <div class="settings-section">
+
+        <!--        Birthdate    -->
+        <div class="setting-item">
+          <span>Birthdate</span>
+          <label class="date">
+            <input type="date" [(ngModel)]="user.birthdate" (change)="updateSetting('birthdate', user.birthdate)">
+          </label>
+        </div>
+
+        <!--   Dark Mode   -->
+        <div class="setting-item">
+          <span>Dark Mode</span>
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="user.dark_mode" (change)="updateSetting('dark_mode', user.dark_mode)" (change)="toggleDarkMode()">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!--   Notifications   -->
+        <div class="setting-item">
+          <span>Notifications</span>
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="user.notifications" (change)="updateSetting('notifications', user.notifications)">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+<!--        Admin Panel Button
+        *ngIf="userIsSuperAdmin" or if user.roles.contains('super')            -->
+        <div class="setting-item" *ngIf="isGroupAdmin || isSuperAdmin">
+          <button (click)="navigationService.navigateToAdminPanel()">Go to Admin Panel</button>
+        </div>
+
+      </div>
+    </main>
+
+
+    <!-- Navigation Bar -->
+    <nav class="bottom-nav">
+      <button (click)="goToDashboard()">Dashboard</button>
+      <button class="active">Settings</button>
+      <button (click)="authenticationService.logout()">Logout</button>
+    </nav>
+  </div>

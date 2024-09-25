@@ -28,7 +28,7 @@ export interface Group {
   _id: string;
   groupId: string;  // changed from _id
   name: string;
-  chatrooms: ChatRoom[] | null;
+  chatrooms: ChatRoom[];
   isExpanded: boolean; // Client sided, if user wants to open group this is true.
 
 }
@@ -65,7 +65,7 @@ export class AuthenticationService {
   public  apiUrl = 'http://localhost:5000/api/';
   private authStatusSubject = new BehaviorSubject<boolean>(this.isTokenValid());
 
-
+  private jwtHelper: JwtHelperService;
 
 
   // current user data types
@@ -76,7 +76,10 @@ export class AuthenticationService {
 
 
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient, 
+    private router: Router) {
+    this.jwtHelper = new JwtHelperService();
     this.checkAuthStatus();
 
     const localisedUserId = localStorage.getItem('current_user_id');
@@ -146,12 +149,37 @@ export class AuthenticationService {
   private isTokenValid(): boolean {
     const token = this.getToken();
 
-    const result = token !== null && token !== '';
+    if (!token) {
+      console.log('Token is null or empty');
+      return false;
+    }
 
-    console.log('Token result: [', result, ']');
+    // const result = token !== null && token !== '';
 
-    // Return true if token; isn't null, has a string of characters, AND valid with JWT
-    return token !== null && token !== '';
+    // console.log('Token result: [', result, ']');
+
+    // // Return true if token; isn't null, has a string of characters, AND valid with JWT
+    // return token !== null && token !== '';
+    try {
+      // Check if the token is expired
+      if (this.jwtHelper.isTokenExpired(token)) {
+        console.log('Token is expired');
+        return false;
+      }
+
+      // Decode the token and verify its structure
+      const decodedToken = this.jwtHelper.decodeToken(token);
+      if (!decodedToken || !decodedToken.userId) {
+        console.log('Token is invalid or missing required claims');
+        return false;
+      }
+
+      console.log('Token is valid');
+      return true;
+    } catch (error) {
+      console.error('Error validating token:', error);
+      return false;
+    }
   }
 
   isTokenExpired(): boolean {
@@ -309,6 +337,26 @@ export class AuthenticationService {
     });
   }
 
+  hasRole(role: string): Observable<boolean> {
+    return this.getCurrentUser().pipe(
+      map(user => user ? user.roles.includes(role) : false)
+    );
+  }
+  
+  getAdminGroups(): Observable<string[]> {
+    return this.getCurrentUser().pipe(
+      map(user => user ? user.adminInGroups : [])
+    );
+  }
+
+  updateCurrentUser(user: User): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}users/${user._id}`, user).pipe(
+      tap(updatedUser => {
+        // Update the stored user information
+        this.currentUser = updatedUser;
+      })
+    );
+  }
 }
 
 

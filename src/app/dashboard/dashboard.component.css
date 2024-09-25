@@ -74,8 +74,17 @@ p {
   border-radius:    4px;
 }
 
+body.dark-mode .group-header {
+  background-color: #232424 !important;
+  color: #ffffff;
+}
+
 .group-header:hover {
   background-color: #f0f2f5;
+}
+
+body.dark-mode .group-header:hover {
+  background-color: #3a3b3c;
 }
 
 .group-name {
@@ -84,11 +93,16 @@ p {
   color: #050505;
 }
 
+body.dark-mode .group-name { 
+  color: #ffffff;
+
+}
+
 .group-item {
   display: flex;
   flex-direction: column;
   margin-bottom: 16px;
-  border: 1px solid #e4e6eb;
+  
 }
 
 .group-item.expanded .channel-list {
@@ -112,14 +126,21 @@ p {
 
 .channel-list {
   /*max-height: 0;*/
-  background-color: #bbd5ff;
+  background-color: #f0f2f5;
+  color:#050505;
   max-height: 512px;
   padding: 4px;
   overflow: visible;
   transition: max-height 0.5s ease-out;
   list-style-type: none;  /* Remove dot point */
+  border-radius:    4px;
+
 }
 
+body.dark-mode .channel-list {
+  background-color: #050505 !important;
+  color:#f0f2f5 !important;
+}
 .channel:hover {
   background-color: #f0f2f5;
 }
@@ -262,4 +283,36 @@ p {
   border:           none;
   border-radius:    4px;
   cursor:           pointer;
+}
+
+/* Dark Mode Styles */
+
+body.dark-mode .dashboard {
+  background-color: #121212;
+}
+
+body.dark-mode .dashboard-container {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .header {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .main {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .nav {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+
+/* groupitem in dashboard css  isnt colouring to black */
+body.dark-mode .group-item group-item {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
 }

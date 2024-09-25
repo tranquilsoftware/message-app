@@ -12,65 +12,9 @@ import { GroupService } from "../services/group.service";
   standalone: true,
   imports: [CommonModule, NgFor, NgIf],
   styleUrls: ['./dashboard.component.css'],
-  template: `
-
-
-    <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
-      <div class="dashboard-container">
-        <header>
-          <h1>Groups & Channels</h1>
-        </header>
-
-        <!--         populate groups last message? surely needd.  -->
-        <!--      Angular For group of every group to current user-->
-        <ul class="group-list">
-
-          <li *ngFor="let group of groups" class="group-item">
-
-            <div class="group-header" (click)="toggleGroup(group)">
-              <i class="fas"
-                 [ngClass]="{'fa-chevron-right': !group.isExpanded, 'fa-chevron-down': group.isExpanded}"></i>
-              {{ group.name }}
-            </div>
-
-
-            <ul *ngIf="group.isExpanded" class="channel-list">
-
-              <li *ngFor="let chatRoom of group.chatRooms" class="channel-list" (click)="openChat(chatRoom.chatRoomId)">
-                {{ chatRoom.chatRoomName }}
-              </li>
-
-              <!-- <li *ngFor="let i of temp_fake_chatrooms" class="channel-list" (click)="openChat(1337)">
-                {{ 'HELLO WORLD' }}
-              </li> -->
-
-            </ul>
-
-          </li>
-        </ul>
-
-        <nav class="bottom-nav">
-          <button class="active">Dashboard</button>
-          <button (click)="goToSettings()">Settings</button>
-          <button (click)="authenticationService.logout()">Logout</button>
-        </nav>
-
-      </div>
-
-
-    </ng-container>
-
-    <ng-template #notAuthenticated>
-      <div class="not-authenticated">
-        <h2>You are not logged in! (Or something went wrong with authentication)</h2>
-        <p>Please logout and try to login again!</p>
-        <button (click)="authenticationService.logout()">Logout</button>
-      </div>
-    </ng-template>
-  `
+  templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  // groups: Group[] = []; // Group list. POPULATED BYSERVER ON SUCCESSFUL GET REQUEST>:)
   groups: any[] = []; // Group list. POPULATED BYSERVER ON SUCCESSFUL GET REQUEST>:)
   selectedGroup: Group | null = null;
   chatrooms: ChatRoom[] = [];
@@ -81,7 +25,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isAuthenticated$: Observable<boolean>;
   private authSubscription: Subscription | undefined;
 
-  temp_fake_chatrooms: number[] = new Array(3);
 
   constructor(
     private navigationService: NavigationService,
@@ -205,6 +148,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
 
+  
 
 }
 

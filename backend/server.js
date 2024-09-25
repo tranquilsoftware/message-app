@@ -2,6 +2,9 @@ const mongoose = require('mongoose');  // For requesting information from MongoD
 const bodyParser = require('body-parser');
 const cors = require('cors');  // for security during requests
 
+const { PeerServer } = require('peer');
+
+const peerServer = PeerServer({port: 9000, path: '/peerjs'});
 
 const express = require('express');  // Server
 const http = require('http');
@@ -187,7 +190,7 @@ io.on('connection', (socket) => {
         // Broadcast the saved message to all clients in the room
         //   This operation, populates messages on screen, that were sent from other people.
         io.to(message_data.chatRoomId).emit('new-message', saved_message);
-        console.log('Message saved successfully:', saved_message);
+        // console.log('Message saved successfully:', saved_message);
 
     }).catch((err) => {
       console.error('Error happened whilst saving the new message received! :', err);
@@ -263,6 +266,13 @@ io.on('connection', (socket) => {
       }
     });
 
+
+    // Video chat -- need peer-id
+    socket.on('peer-id', (peerId) => {
+      // Associate the peerId with the user's socket
+      socket.peerId = peerId;
+      console.log(`User ${socket.id} associated with peer ID: ${peerId}`);
+    });
 
   // DISCONNECT
   socket.on('disconnect', () => {

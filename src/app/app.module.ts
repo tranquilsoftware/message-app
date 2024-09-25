@@ -15,6 +15,7 @@ import {AuthInterceptor} from "./services/auth.interceptor";
 
 import { SocketIoModule, SocketIoConfig } from "ngx-socket-io";
 import {SocketService} from "./services/socket.service";
+import { VideoChatComponent } from './video-chat/video-chat.component';
 
 const config: SocketIoConfig = {
   url: 'http://localhost:5000',
@@ -34,6 +35,7 @@ const config: SocketIoConfig = {
     BrowserModule,
     RouterModule.forRoot(routes),  AppRoutingModule, // setup routing..
     LoginComponent,
+    VideoChatComponent,
     DashboardComponent,
     SettingsComponent,
     ChatRoomComponent,

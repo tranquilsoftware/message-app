@@ -49,17 +49,10 @@ router.get('/group/:groupId', async (req, res) => {
 
 // ADMIN PANEL ROUTES
 // GET all chatrooms
-router.get('/chatrooms', async (req, res) => {
-  try {
-    const chatrooms = await ChatRoom.find();
-    res.json(chatrooms);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+
 
 // POST a new chatroom
-router.post('/chatrooms', async (req, res) => {
+router.post('/', async (req, res) => {
   const chatroom = new ChatRoom({
     name: req.body.name,
     groupId: req.body.groupId
@@ -73,12 +66,17 @@ router.post('/chatrooms', async (req, res) => {
   }
 });
 
-// PUT (Edit) a specific chatroom
-router.put('/chatrooms/:id', async (req, res) => {
+// PUT (Edit) a specific chatroom (parameterize the chatRoomId)
+// ended up using /:groupId/chatrooms/:chatRoomId' in groups and that worked
+router.put('/:chatRoomId', async (req, res) => {
   try {
-    const updatedChatroom = await ChatRoom.findByIdAndUpdate(
-      req.params.id,
-      { $set: { name: req.body.name } },
+    const { chatRoomId } = req.params;
+    const { chatRoomName } = req.body;
+    { $set: { name: req.body.name } }
+
+    const updatedChatroom = await ChatRoom.findOneAndUpdate(
+      { chatRoomId: chatRoomId },
+      { $set: { chatRoomName: chatRoomName } },
       { new: true }
     );
 

@@ -8,6 +8,7 @@ import { AdminPanelComponent} from "./admin-panel/admin-panel.component";
 import { SettingsComponent } from "./settings/settings.component";
 import { DashboardComponent } from "./dashboard/dashboard.component"
 import { RegisterUserComponent } from "./register-user/register-user.component";
+import { VideoChatComponent } from './video-chat/video-chat.component';
 
 // AuthGuard (for login token logic)
 import { authGuard } from './services/auth.guard';
@@ -27,6 +28,10 @@ export const routes: Routes = [ // Define URL Routing
 
   // chat room (id - id of user we are communicating with)
   { path: 'chat/:id',   component: ChatRoomComponent, canActivate: [authGuard] },
+
+  // video chat / facetime
+  { path: 'video-chat/:roomId', component: VideoChatComponent, canActivate: [authGuard] },
+
 
   // Error handling (Error 404 reroute):
   { path: '**',           redirectTo: '/login',     pathMatch: 'full' },

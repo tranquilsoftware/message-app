@@ -48,20 +48,23 @@ router.get('/:groupId', async (req, res) => {
 
 
 // Create a new chat room within a group
-// localhost/api/groups/:groupId/chat-rooms
+// WORKS.
+// localhost/api/groups/:groupId/chatrooms
 router.post('/:groupId/chatrooms', async (req, res) => {
   try {
     const { groupId } = req.params;
-    const { name } = req.body;
+    const { chatRoomName } = req.body;
+
     
-    // SEEMS TO CAUSE IT TO NOT WORK!?!??!
-    // const group = await Group.findOne({ groupId: groupId });
-    // if (!group) {
-    //   return res.status(404).json({ message: 'Group not found' });
-    // }
+
+    console.log('groupId:', groupId, " then Name:", chatRoomName);
+
+    if (!chatRoomName) {
+      return res.status(400).json({ message: 'Chat room name is required' });
+    }
 
     const newChatRoom = new ChatRoom({
-      chatRoomName: name,
+      chatRoomName: chatRoomName,
       groupId: groupId,
       chatRoomId: Math.random().toString(36).substr(2, 9) // Generate a unique ID
     });
@@ -80,6 +83,7 @@ router.post('/:groupId/chatrooms', async (req, res) => {
     res.status(500).json({ message: 'Error creating chat room' });
   }
 });
+
 
 
 
@@ -118,24 +122,6 @@ router.get('/:groupId/chatrooms', async (req, res) => {
 
 
 
-// Create (POST) a new chatroom within a group
-router.post('/groups/:groupId/chatrooms', async (req, res) => {
-  try {
-    const group = await Group.findOne({ groupId: req.params.groupId });
-    if (!group) return res.status(404).json({ message: 'Group not found' });
-
-    const chatroom = new ChatRoom({
-      chatRoomId: req.body.chatRoomId,
-      name: req.body.name,
-      groupId: group.groupId
-    });
-
-    const newChatRoom = await chatroom.save();
-    res.status(201).json(newChatRoom);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
 
 
 
@@ -146,17 +132,79 @@ router.post('/groups/:groupId/chatrooms', async (req, res) => {
 // PUT (Edit) a specific group
 router.put('/:groupId', async (req, res) => {
   try {
-    const updatedGroup = await Group.findOneAndUpdate(
-      { groupId: req.params.groupId },
-      { $set: { name: req.body.name } },
-      { new: true }
-    );
+    const { groupId } = req.params;
+    const { name, chatrooms } = req.body;
 
-    if (!updatedGroup) {
+    const group = await Group.findOne({ groupId: groupId });
+    if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
+    if (name) {
+      group.name = name;
+    }
+
+    if (chatrooms && Array.isArray(chatrooms)) {
+      group.chatrooms = chatrooms.map(chatroom => chatroom._id);
+    }
+
+    await group.save();
+
+    const updatedGroup = await Group.findOne({ groupId: groupId })
+      .populate('chatrooms');
+
     res.json(updatedGroup);
+
+    // const { groupId } = req.params;
+    // const { name, chatrooms, admins } = req.body;
+
+    // const group = await Group.findOne({ groupId: groupId });
+    // if (!group) {
+    //   return res.status(404).json({ message: 'Group not found' });
+    // }
+
+    // if (name) {
+    //   group.name = name;
+    // }
+
+    // if (chatrooms && Array.isArray(chatrooms)) {
+    //   for (let chatroom of chatrooms) {
+    //     const existingChatroom = await ChatRoom.findOne({ chatRoomId: chatroom.chatRoomId, groupId: groupId });
+    //     if (existingChatroom) {
+    //       existingChatroom.chatRoomName = chatroom.name;
+    //       await existingChatroom.save();
+    //     }
+    //   }
+    // }
+
+    // if (admins && Array.isArray(admins)) {
+    //   // Update group admins
+    //   const currentAdmins = await User.find({ adminInGroups: groupId });
+    //   for (let admin of currentAdmins) {
+    //     if (!admins.includes(admin._id.toString())) {
+    //       admin.adminInGroups = admin.adminInGroups.filter(g => g !== groupId);
+    //       await admin.save();
+    //     }
+    //   }
+    //   for (let adminId of admins) {
+    //     const user = await User.findById(adminId);
+    //     if (user && !user.adminInGroups.includes(groupId)) {
+    //       user.adminInGroups.push(groupId);
+    //       if (!user.roles.includes('groupAdmin')) {
+    //         user.roles.push('groupAdmin');
+    //       }
+    //       await user.save();
+    //     }
+    //   }
+    // }
+
+    // await group.save();
+
+    // const updatedGroup = await Group.findOne({ groupId: groupId })
+    //   .populate('chatrooms')
+    //   .populate('admins', 'username email');
+
+    // res.json(updatedGroup);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -165,13 +213,31 @@ router.put('/:groupId', async (req, res) => {
 // POST (Create) a new group!
 // localhost/api/groups
 router.post('/', async (req, res) => {
-  const group = new Group({
-    // groupId: req.body.groupId,
-    name:    req.body.name
-  });
-
   try {
+    const { name, userId } = req.body;  // Expect userId to be sent in the request body
+
+    if (!name || !userId) {
+      return res.status(400).json({ message: 'Group name and user ID are required' });
+    }
+
+    const group = new Group({
+      name: req.body.name,
+      groupId: Math.random().toString(36).substr(2, 9) // Generate a unique ID
+      // admins: [userId]
+    });
+
     const newGroup = await group.save();
+
+    console.log('group made: POST : ', newGroup);
+
+    // Update the current user's adminInGroups
+    // IF U MAKE A GNEW GROUP, U SHOULD BE THE GROUPADMIN INSIDE IT.. DO THAT BELOW
+    // const userId = req.user._id; // Assuming you have user info in the request
+    // await User.findByIdAndUpdate(userId, {
+    //   $push: { adminInGroups: newGroup.groupId },
+    //   $addToSet: { roles: 'groupAdmin' }
+    // });
+
     res.status(201).json(newGroup);
   } catch (err) {
     res.status(400).json({ message: err.message });

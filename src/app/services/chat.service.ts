@@ -70,6 +70,11 @@ export class ChatService {
   }
 
 
+  // Video Chat Peer ID
+  emitPeerId(peerId: string) {
+    this.socket.getSocket().emit('peer-id', peerId);
+  }
+
 
 // use in phase 2
 //   getInitialMessages(room_id: string): Observable<Message[]> {

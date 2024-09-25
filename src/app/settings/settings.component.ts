@@ -3,6 +3,7 @@ import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {AuthenticationService, UserSettings} from "../services/authentication.service";
 import {NavigationService} from "../services/navigation.service";
+import { DarkModeService } from '../services/dark-mode.service';
 
 
 @Component({
@@ -10,70 +11,7 @@ import {NavigationService} from "../services/navigation.service";
   standalone: true,
   imports: [CommonModule, FormsModule],
   styleUrl: './settings.component.css',
-  template: `
-    <div class="settings-dashboard">
-    <header>
-      <h1>Settings</h1>
-    </header>
-
-    <main>
-    <!--  Profile picture -->
-      <div class="profile-section">
-        <div class="profile-picture" (click)="onProfilePictureClick()">
-          <img [src]="user.profile_pic || '/img/default_user.png'" alt="....... Loading...">
-          <div class="change-overlay" *ngIf="!isUploadingProfilePicture">Change</div>
-          <div class="loading-overlay" *ngIf="isUploadingProfilePicture">Uploading...</div>
-        </div>
-        <h2>{{ user.username }}</h2>
-        <p>{{ user.email }}</p>
-      </div>
-
-      <div class="settings-section">
-
-        <!--        Birthdate    -->
-        <div class="setting-item">
-          <span>Birthdate</span>
-          <label class="date">
-            <input type="date" [(ngModel)]="user.birthdate" (change)="updateSetting('birthdate', user.birthdate)">
-          </label>
-        </div>
-
-        <!--   Dark Mode   -->
-        <div class="setting-item">
-          <span>Dark Mode</span>
-          <label class="toggle">
-            <input type="checkbox" [(ngModel)]="user.dark_mode" (change)="updateSetting('dark_mode', user.dark_mode)">
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <!--   Notifications   -->
-        <div class="setting-item">
-          <span>Notifications</span>
-          <label class="toggle">
-            <input type="checkbox" [(ngModel)]="user.notifications" (change)="updateSetting('notifications', user.notifications)">
-            <span class="slider"></span>
-          </label>
-        </div>
-
-<!--        Admin Panel Button
-        *ngIf="userIsSuperAdmin" or if user.roles.contains('super')            -->
-        <div class="setting-item">
-          <button (click)="navigationService.navigateToAdminPanel()">Go to Admin Panel</button>
-        </div>
-
-      </div>
-    </main>
-
-
-    <!-- Navigation Bar -->
-    <nav class="bottom-nav">
-      <button (click)="goToDashboard()">Dashboard</button>
-      <button class="active">Settings</button>
-      <button (click)="authService.logout()">Logout</button>
-    </nav>
-  </div>
-  `
+  templateUrl: './settings.component.html'
 })
 export class SettingsComponent implements OnInit {
   user: UserSettings = {
@@ -85,16 +23,34 @@ export class SettingsComponent implements OnInit {
     notifications:  true    // todo: this is a placeholder for notifications to  be sent the the user, in some form of wahy.;
   }
 
+  isGroupAdmin: boolean = false;
+  isSuperAdmin: boolean = false;
   isUploadingProfilePicture: boolean = false;
 
   // TODO Implement maybe: show timestamps on messages, notifications?
   constructor(
-    public authService: AuthenticationService,
-    public navigationService: NavigationService)
-  {}
+    public authenticationService: AuthenticationService,
+    public navigationService: NavigationService,
+    private darkModeService: DarkModeService
+  ) {}
 
   ngOnInit(): void {
     this.loadUserSettings();
+    this.checkUsersRoles();
+  }
+
+  checkUsersRoles(): void {
+    this.authenticationService.hasRole('groupAdmin').subscribe(isGroupAdmin => {
+      this.isGroupAdmin = isGroupAdmin;
+    });
+    
+    this.authenticationService.hasRole('super').subscribe(isSuperAdmin => {
+      this.isSuperAdmin = isSuperAdmin;
+    });
+  }
+
+  toggleDarkMode(): void {
+    this.darkModeService.toggleDarkMode();
   }
 
   goToDashboard(): void {
@@ -102,7 +58,7 @@ export class SettingsComponent implements OnInit {
   }
 
   loadUserSettings(): void {
-    this.authService.getUserSettings().subscribe(
+    this.authenticationService.getUserSettings().subscribe(
       settings => {
         this.user = settings;
         console.log('Loaded user settings:', this.user); // Add this for debugging
@@ -120,7 +76,7 @@ export class SettingsComponent implements OnInit {
 
   updateSetting(setting: string, value: boolean | string): void {
     console.log(`Attempting to update ${setting} to ${value}`);
-    this.authService.updateUserSetting(setting, value).subscribe(
+    this.authenticationService.updateUserSetting(setting, value).subscribe(
       () => {
         console.log(`${setting} updated successfully!`);
       },
@@ -159,7 +115,7 @@ export class SettingsComponent implements OnInit {
   // sends uploaded pic to the authentication service, which tells server.js to update.
   uploadProfilePicture(file: File): void {
     this.isUploadingProfilePicture = true;
-    this.authService.uploadProfilePicture(file).subscribe({
+    this.authenticationService.uploadProfilePicture(file).subscribe({
       next: (response: any) => {
 
         this.isUploadingProfilePicture = false;

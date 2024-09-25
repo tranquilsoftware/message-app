@@ -32,17 +32,13 @@ import {DarkModeService} from "../services/dark-mode.service";
 
         <!--    People In Room    -->
         <div class="chat-info">
-          <!--        todo  chat room name here -->
          <h2>{{ chatRoomName }}</h2>
-<!--          <button (click)="toggleDarkMode()">-->
-<!--            {{ isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}-->
-<!--          </button>-->
         </div>
 
 
 
         <!--        VIDEO CALL BUTTON-->
-        <button class="video-call-button">
+        <button class="video-call-button" (click)="startVideoChat()">
           <!-- SVG Of Video Camera Icon -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -50,7 +46,6 @@ import {DarkModeService} from "../services/dark-mode.service";
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
           </svg>
         </button>
-
       </div>
 
 
@@ -78,6 +73,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   newMessage:   string = ''; // user message in message box..
   isDark: boolean = false;
   chatRoomName: string = '';
+  showVideoChat: boolean = false;
 
   private messageSubscription: Subscription | undefined;
   private darkModeSubscription: Subscription | undefined;
@@ -283,6 +279,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   }
 
+
+  // VIDEO CHAT METHODS
+
+  startVideoChat() {
+    this.navigationService.navigateToVideoChat(this.chatRoomId);
+    this.showVideoChat = true;
+  }
+
+  endVideoChat() {
+    this.showVideoChat = false;
+  }
 
 }
 

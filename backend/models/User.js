@@ -11,7 +11,7 @@ const userSchema = new Schema({
   },
 
   password: {
-    type:     String,  // For testing obviously, passwords should be hashed in production
+    type:     String,  // passwords are hashed in production. encrypted using bcrypt library
     required: true,
   },
 
@@ -34,13 +34,13 @@ const userSchema = new Schema({
 
   dark_mode: {
     type:     Boolean,
-    required: false,
+    required: false, // not required by default
     default:  false
-  },  // TODO: implement dark mode (changes css styling)
+  },  
 
   notifications: {
     type:     Boolean,
-    required: false,
+    required: false, // not required by default
     default:  true
   }, // todo: this is a placeholder for notifications to  be sent the the user
 
@@ -57,7 +57,7 @@ const userSchema = new Schema({
     default: 1 // Refering to Group ID 1.. (General Group)
   }],
 
-  adminInGroups: [{
+  adminInGroups: [{ // the groupids of groups that the user, is group-admin in. the ID has to be popualted within the user for them to have access to the website
     type: String,
     required: false,
   }],

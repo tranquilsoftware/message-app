@@ -60,6 +60,10 @@ export class NavigationService {
     this.navigateTo('/admin', 'Navigated to admin panel.', 'Navigation to admin panel failed.');
   }
 
+  navigateToVideoChat(roomId: string) {
+    this.navigateTo(`/video-chat/${roomId}`, `Navigated to video chat for room ID: ${roomId}`, 'Navigation to video chat failed.');
+  }
+
 
 
 }

@@ -2,11 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService, User, Group, ChatRoom } from '../services/authentication.service';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, forkJoin, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { NavigationService } from '../services/navigation.service';
 import { ChatService } from '../services/chat.service';
+import * as toastr from "toastr";
+import { Router } from '@angular/router';
+import { HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-panel',
@@ -14,213 +17,274 @@ import { ChatService } from '../services/chat.service';
   imports: [CommonModule, FormsModule],
   providers: [NavigationService, ChatService],
   styleUrls: ['./admin-panel.component.css'],
-  template: `
-    <div class="admin-panel-container">
-    <!-- <button class="back-button" (click)="showAdminPanel()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M15 18l-6-6 6-6"/>
-      </svg>
-      Back to Admin Panel
-    </button> -->
-
-      <div *ngIf="isSuper && showingAdminPanel" class="admin-section">
-        <h2>Super Admin Panel</h2>
-        <div class="button-group">
-          <button class="admin-button" (click)="showUsers()">Manage Users</button>
-          <button class="admin-button" (click)="showGroups()">Manage Groups</button>
-        </div>
-      </div>
-      <div *ngIf="showingUsers" class="list-section">
-        <h3>Users</h3>
-        <ul>
-          <li *ngFor="let user of users" class="list-item">
-            <span>{{ user.username }} - {{ user.email }}</span>
-            <div class="button-group">
-              <button class="admin-button" (click)="promoteToGroupAdmin(user)">Promote to Group Admin</button>
-              <button class="admin-button" (click)="promoteToSuperAdmin(user)">Promote to Super Admin</button>
-              <button class="admin-button remove" (click)="removeUser(user)">Remove User</button>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div *ngIf="showingGroups" class="list-section">
-        <h3>Groups</h3>
-        <button class="admin-button" (click)="createGroup()">Add Group</button>
-        <ul>
-          <li *ngFor="let group of groups" class="list-item">
-            <span>{{ group.name }}</span>
-            <div class="button-group">
-              <button class="admin-button" (click)="editGroup(group)">Edit</button>
-              <button class="admin-button remove" (click)="removeGroup(group)">Remove</button>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div *ngIf="isGroupAdmin" class="admin-section">
-        <h2>Group Admin Panel</h2>
-        <button class="admin-button" (click)="createGroup()">Create Group</button>
-        <div *ngFor="let group of adminGroups" class="group-section">
-          <h3>{{ group.name }}</h3>
-          <div class="button-group">
-            <button class="admin-button" (click)="createChatRoom(group)">Create Chat Room</button>
-            <button class="admin-button remove" (click)="removeGroup(group)">Remove Group</button>
-          </div>
-          <h4>Chat Rooms</h4>
-          <ul>
-            <li *ngFor="let chatRoom of group.chatrooms" class="list-item">
-              <span>{{ chatRoom.chatRoomName }}</span>
-              <div class="button-group">
-                <button class="admin-button" (click)="editChatRoom(group, chatRoom)">Edit</button>
-                <button class="admin-button remove" (click)="removeChatRoom(group, chatRoom)">Remove</button>
-              </div>
-            </li>
-          </ul>
-          <h4>Users</h4>
-          <ul>
-            <li *ngFor="let user of groupUsers[group._id]" class="list-item">
-              <span>{{ user.username }}</span>
-              <div class="button-group">
-                <button class="admin-button" (click)="removeUserFromGroup(user, group)">Remove from Group</button>
-                <button class="admin-button remove" (click)="banUser(user, group)">Ban User</button>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div *ngIf="showingChannels" class="list-section">
-        <h3>Channels</h3>
-        <button class="admin-button" (click)="openAddChannelModal()">Add Channel</button>
-        <ul>
-          <li *ngFor="let channel of channels" class="list-item">
-            <span>{{ channel.chatRoomName }} (Group: {{ getGroupName(channel.groupId) }})</span>
-            <div class="button-group">
-              <button class="admin-button" (click)="editChannel(channel)">Edit</button>
-              <button class="admin-button remove" (click)="removeChannel(channel)">Remove</button>
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <div *ngIf="showAddChannelModal" class="modal">
-        <div class="modal-content">
-          <h3>Add New Channel</h3>
-          <select [(ngModel)]="newChannel.groupId">
-            <option value="">Select a group</option>
-            <option *ngFor="let group of groups" [value]="group._id">{{ group.name }}</option>
-          </select>
-          <input [(ngModel)]="newChannel.name" placeholder="Channel name">
-          <div class="button-group">
-            <button class="admin-button" (click)="addChannel()">Add</button>
-            <button class="admin-button remove" (click)="cancelAddChannel()">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './admin-panel.component.html'
 })
 export class AdminPanelComponent implements OnInit {
-  isSuper = false;
-  isGroupAdmin = false;
-  users: User[] = [];
   groups: Group[] = [];
-  adminGroups: Group[] = [];
-  groupUsers: { [groupId: string]: User[] } = {};
-  showingUsers = false;
-  showingGroups = false;
-  showingAdminPanel = true;  // New property to track if we're showing the main admin panel
-  showingChannels = false;
-  channels: ChatRoom[] = [];
-  showAddChannelModal = false;
-  newChannel: { name: string; groupId: string } = { name: '', groupId: '' };
+  selectedGroup: Group | null = null;
+  selectedChatroom: ChatRoom | null = null;
+  private apiUrl = 'http://localhost:5000/api';
+
+  isSuperAdmin: boolean = false;
+  isGroupAdmin: boolean = false;
+  adminGroups: Group[] = []; // ONLY FOR NORMAL USERS - SHOW THE GROUPS THEY ARE ADMIN OF.
+  showingUsers: boolean = false;
+  showingGroups: boolean = false;
+  users: User[] = [];
 
   constructor(
     private authService: AuthenticationService,
-    public navigationService: NavigationService,
-    public chatService: ChatService,
-    private http: HttpClient
+    private http: HttpClient,
+    private chatService: ChatService,
+    private navigationService: NavigationService
   ) {}
 
   ngOnInit() {
     this.checkUserRole();
-    this.loadUsers();
-    this.loadGroups();
   }
 
   checkUserRole() {
-    this.authService.getCurrentUser().subscribe(
-      (user: User | null) => {
-        if (user) {
-          // Assume 'roles' is a property of User. If not, you'll need to add it.
-          this.isSuper = user.roles?.includes('super') || false;
-          this.isGroupAdmin = user.roles?.includes('groupAdmin') || false;
-          if (this.isGroupAdmin) {
-            this.loadAdminGroups(user._id);
-          }
+    forkJoin({
+      isSuperAdmin: this.authService.hasRole('super'),
+      isGroupAdmin: this.authService.hasRole('groupAdmin'),
+      adminGroups: this.authService.getAdminGroups()
+    }).subscribe({
+      next: ({ isSuperAdmin, isGroupAdmin, adminGroups }) => {
+        this.isSuperAdmin = isSuperAdmin;
+        this.isGroupAdmin = isGroupAdmin;
+        if (this.isSuperAdmin) {
+          this.loadAllGroups();
+          this.loadAllUsers();
+        } else if (this.isGroupAdmin) {
+          this.loadAdminGroups(adminGroups);
+        } else {
+          this.navigationService.navigateToDashboard();
         }
       },
-      (error) => console.error('Error fetching current user:', error)
-    );
+      error: (error) => {
+        console.error('Error checking user role', error);
+        toastr.error('Failed to load user information. Please try again.');
+        this.navigationService.navigateToDashboard();
+      }
+    });
   }
 
-  loadUsers() {
+  loadAllGroups() {
+    this.http.get<Group[]>(`${this.apiUrl}/groups`)
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (groups) => {
+          this.groups = groups;
+        },
+        error: (error) => {
+          console.error('Failed to load groups', error);
+          toastr.error('Failed to load groups. Please try again.');
+        }
+      });
+  }
+
+  loadAllUsers() {
     this.getWithAuth<User[]>('users').subscribe(
-      (users) => this.users = users,
-      (error) => console.error('Error loading users:', error)
-    );
-  }
-
-  loadGroups() {
-    this.getWithAuth<Group[]>('groups').subscribe(
-      (groups) => this.groups = groups,
-      (error) => console.error('Error loading groups:', error)
-    );
-  }
-
-  loadAdminGroups(userId: string) {
-    this.getWithAuth<Group[]>(`users/${userId}/admin-groups`).subscribe(
-      (groups) => {
-        this.adminGroups = groups;
-        groups.forEach(group => this.loadGroupUsers(group._id));
+      (users) => {
+        this.users = users;
       },
-      (error) => console.error('Error loading admin groups:', error)
+      (error) => {
+        console.error('Error loading users:', error);
+      }
     );
   }
 
-  loadGroupUsers(groupId: string) {
-    this.getWithAuth<User[]>(`groups/${groupId}/users`).subscribe(
-      (users) => this.groupUsers[groupId] = users,
-      (error) => console.error(`Error loading users for group ${groupId}:`, error)
-    );
+  loadAdminGroups(adminGroupIds: string[]) {
+    this.http.get<Group[]>(`${this.apiUrl}/groups`)
+      .pipe(
+        map(groups => groups.filter(group => adminGroupIds.includes(group.groupId))),
+        catchError(this.handleError)
+      )
+      .subscribe({
+        next: (groups) => {
+          this.adminGroups = groups;
+        },
+        error: (error) => {
+          console.error('Failed to load admin groups', error);
+          toastr.error('Failed to load your admin groups. Please try again.');
+        }
+      });
   }
 
   showUsers() {
     this.showingUsers = true;
     this.showingGroups = false;
-    this.showingAdminPanel = false;
-    this.showingChannels = false;
   }
 
   showGroups() {
     this.showingGroups = true;
     this.showingUsers = false;
-    this.showingAdminPanel = false;
-    this.showingChannels = false;
   }
 
-  showChannels() {
-    this.showingAdminPanel = false;
-    this.showingUsers = false;
-    this.showingGroups = false;
-    this.showingChannels = true;
-    this.loadChannels();
+  editGroup(group: Group) {
+    this.selectedGroup = { ...group };
+    this.selectedChatroom = null;
+    this.loadGroupChatrooms(group.groupId);
+
+    // scroll down
+    setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
   }
 
-  showAdminPanel(): void {
-    this.showingUsers = false;
-    this.showingGroups = false;
-    this.showingAdminPanel = true;
-    this.showingChannels = false;
+
+  // /api/chatrooms/group/:groupId
+  loadGroupChatrooms(groupId: string) {
+    // this.http.get<ChatRoom[]>(`${this.apiUrl}/groups/${groupId}/chatrooms`)
+
+    this.http.get<ChatRoom[]>(`${this.apiUrl}/chatrooms/group/${groupId}`)
+    .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (chatrooms) => {
+          this.selectedGroup!.chatrooms = chatrooms;
+        },
+        error: (error) => {
+          console.error('Failed to load chatrooms', error);
+          toastr.error('Failed to load chatrooms. Please try again.');
+        }
+      });
+  }
+
+  addGroup() {
+    this.selectedGroup = {
+      _id: '',
+      groupId: '',
+      name: '',
+      chatrooms: [],
+      isExpanded: false
+    };
+    this.selectedChatroom = null;
+  }
+
+  removeGroup(group: Group) {
+    if (confirm(`Are you sure you want to remove the group "${group.name}"?`)) {
+      this.http.delete(`${this.apiUrl}/groups/${group.groupId}`)
+        .pipe(catchError(this.handleError))
+        .subscribe(
+          () => {
+            this.groups = this.groups.filter(g => g.groupId !== group.groupId);
+            toastr.success(`Successfully removed group: ${group.name}`);
+          },
+          (error) => {
+            console.error('Failed to remove group', error);
+            toastr.error('Failed to remove group. Please try again.');
+          }
+        );
+    }
+  }
+
+  updateGroup() {
+    if (this.selectedGroup) {
+      const isNewGroup = !this.selectedGroup.groupId;
+      const url = isNewGroup ? `${this.apiUrl}/groups` : `${this.apiUrl}/groups/${this.selectedGroup.groupId}`;
+      const method = isNewGroup ? 'post' : 'put';
+
+      this.http.request<Group>(method, url, { body: this.selectedGroup })
+        .pipe(catchError(this.handleError))
+        .subscribe({
+          next: (updatedGroup: Group) => {
+            if (isNewGroup) {
+              this.groups.push(updatedGroup);
+            } else {
+              const index = this.groups.findIndex(g => g.groupId === updatedGroup.groupId);
+              if (index !== -1) {
+                this.groups[index] = updatedGroup;
+              }
+            }
+            this.selectedGroup = null;
+            toastr.success(`Successfully ${isNewGroup ? 'added' : 'updated'} group: ${updatedGroup.name}`);
+          },
+          error: (error) => {
+            console.error(`Failed to ${isNewGroup ? 'add' : 'update'} group`, error);
+            toastr.error(`Failed to ${isNewGroup ? 'add' : 'update'} group. Please try again.`);
+          }
+        });
+    } else {
+      console.error('No group selected');
+      toastr.error('Unable to update group: No group selected');
+    }
+  }
+
+  cancelEdit() {
+    this.selectedGroup = null;
+  }
+
+  addChatroom() {
+    if (this.selectedGroup && this.selectedGroup.groupId) {
+      this.selectedChatroom = {
+        _id: '',
+        groupId: this.selectedGroup.groupId,
+        chatRoomName: '',
+        chatRoomId: '',
+        createdAt: new Date().toISOString()
+      };
+    } else {
+      console.error('No group selected or group ID is missing');
+      toastr.error('Please select a group before adding a chatroom');
+    }
+  }
+
+  editChatroom(chatroom: ChatRoom) {
+    this.selectedChatroom = { ...chatroom };
+  }
+
+  removeChatroom(chatroom: ChatRoom) {
+    if (this.selectedGroup && confirm(`Are you sure you want to remove the chatroom "${chatroom.chatRoomName}"?`)) {
+                                       // api/groups/:groupId/chatrooms/:chatRoomId'
+            this.http.delete(`${this.apiUrl}/groups/${this.selectedGroup.groupId}/chatrooms/${chatroom.chatRoomId}`)
+        .pipe(catchError(this.handleError))
+        .subscribe(
+          () => {
+            this.selectedGroup!.chatrooms = this.selectedGroup!.chatrooms.filter(c => c.chatRoomId !== chatroom.chatRoomId);
+            toastr.success(`Successfully removed chatroom: ${chatroom.chatRoomName}`);
+          },
+          (error) => {
+            console.error('Failed to remove chatroom', error);
+            toastr.error('Failed to remove chatroom. Please try again.');
+          }
+        );
+    }
+  }
+
+  updateChatroom() {
+    if (this.selectedChatroom && this.selectedGroup && this.selectedGroup.groupId) {
+      const isNewChatroom = !this.selectedChatroom.chatRoomId;
+      const url = isNewChatroom
+        ? `${this.apiUrl}/groups/${this.selectedGroup.groupId}/chatrooms`
+        : `${this.apiUrl}/chatrooms/${this.selectedChatroom.chatRoomId}`;
+      const method = isNewChatroom ? 'post' : 'put';
+
+      this.http.request<ChatRoom>(method, url, { body: this.selectedChatroom })
+        .pipe(catchError(this.handleError))
+        .subscribe({
+          next: (updatedChatroom: ChatRoom) => {
+            if (isNewChatroom) {
+              this.selectedGroup!.chatrooms.push(updatedChatroom);
+            } else {
+              const index = this.selectedGroup!.chatrooms.findIndex(c => c.chatRoomId === updatedChatroom.chatRoomId);
+              if (index !== -1) {
+                this.selectedGroup!.chatrooms[index] = updatedChatroom;
+              }
+            }
+            this.selectedChatroom = null;
+            toastr.success(`Successfully ${isNewChatroom ? 'added' : 'updated'} chatroom: ${updatedChatroom.chatRoomName}`);
+          },
+          error: (error) => {
+            console.error(`Failed to ${isNewChatroom ? 'add' : 'update'} chatroom`, error);
+            toastr.error(`Failed to ${isNewChatroom ? 'add' : 'update'} chatroom. Please try again.`);
+          }
+        });
+    } else {
+      console.error('Selected chatroom, group, or group ID is missing');
+      toastr.error('Unable to update chatroom: Missing data');
+    }
+  }
+
+  cancelChatroomEdit() {
+    this.selectedChatroom = null;
   }
 
   promoteToGroupAdmin(user: User) {
@@ -271,188 +335,39 @@ export class AdminPanelComponent implements OnInit {
     );
   }
 
-  removeGroup(group: Group) {
-        this.deleteWithAuth(`groups/${group.groupId}`).subscribe(
-      () => {
-        this.groups = this.groups.filter(g => g._id !== group._id);
-        this.adminGroups = this.adminGroups.filter(g => g._id !== group._id);
-        console.log(`Group ${group.name} removed`);
+
+  createUser(user: User) {
+    this.postWithAuth<User>('users', user).subscribe(
+      (newUser) => {
+        this.users.push(newUser);
       },
-      (error) => console.error('Error removing group:', error)
+      (error) => console.error('Error creating user:', error)
     );
   }
-
-  editGroup(group: Group) {
-    const newGroupName = prompt('Enter new group name:', group.name);
-    if (newGroupName && newGroupName !== group.name) {
-      const sanitizedGroupName = newGroupName.replace(/[^a-zA-Z0-9 ]/g, '').trim();
-      if (sanitizedGroupName) {
-        this.putWithAuth<Group>(`groups/${group.groupId}`, { name: sanitizedGroupName }).subscribe(
-          (updatedGroup: Group) => {
-            const index = this.groups.findIndex(g => g.groupId === group.groupId);
-            if (index !== -1) {
-              this.groups[index] = updatedGroup;
-            }
-            const adminIndex = this.adminGroups.findIndex(g => g.groupId === group.groupId);
-            if (adminIndex !== -1) {
-              this.adminGroups[adminIndex] = updatedGroup;
-            }
-            console.log(`Group ${group.name} updated to ${updatedGroup.name}`);
-          },
-          (error) => console.error('Error updating group:', error)
-        );
-      } else {
-        alert('Invalid group name. Please use only letters, numbers, and spaces.');
-      }
-    }
-  }
-
-  createGroup() {
-    const groupName = prompt('Enter group name:');
-    if (groupName) {
-      const sanitizedGroupName = groupName.replace(/[^a-zA-Z0-9 ]/g, '').trim();
-      if (sanitizedGroupName) {
-        this.postWithAuth<Group>('groups', { name: sanitizedGroupName }).subscribe(
-          (newGroup) => {
-            this.groups.push(newGroup);
-            this.adminGroups.push(newGroup);
-            console.log(`Group ${newGroup.name} created with ID: ${newGroup.groupId}`);
-          },
-          (error) => console.error('Error creating group:', error)
-        );
-      } else {
-        alert('Invalid group name. Please use only letters, numbers, and spaces.');
-      }
-    }
-  }
-
-  createChatRoom(group: Group) {
-    const chatRoomName = prompt('Enter chat room name:');
-    if (chatRoomName) {
-      this.postWithAuth<ChatRoom>(`groups/${group._id}/chatrooms`, { name: chatRoomName }).subscribe(
-        (newChatRoom: ChatRoom) => {
-          if (!group.chatrooms) {
-            group.chatrooms = [];
-          }
-          group.chatrooms.push(newChatRoom);
-          console.log(`Chat room ${newChatRoom.chatRoomName} created in group ${group.name}`);
-        },
-        (error) => console.error('Error creating chat room:', error)
-      );
-    }
-  }
-
-  editChatRoom(group: Group, chatRoom: ChatRoom) {
-    const newChatRoomName = prompt('Enter new chat room name:', chatRoom.chatRoomName);
-    if (newChatRoomName && newChatRoomName !== chatRoom.chatRoomName) {
-      this.postWithAuth<ChatRoom>(`groups/${group._id}/chatrooms/${chatRoom.chatRoomId}`, { name: newChatRoomName }).subscribe(
-        (updatedChatRoom: ChatRoom) => {
-          const index = group.chatrooms?.findIndex(c => c._id === chatRoom._id) ?? -1;
-          if (index !== -1 && group.chatrooms) {
-            group.chatrooms[index] = updatedChatRoom;
-          }
-          console.log(`Chat room ${chatRoom.chatRoomName} updated to ${updatedChatRoom.chatRoomName} in group ${group.name}`);
-        },
-        (error) => console.error('Error updating chat room:', error)
-      );
-    }
-  }
-
-  removeChatRoom(group: Group, chatRoom: ChatRoom) {
-    this.deleteWithAuth(`groups/${group._id}/chatrooms/${chatRoom.chatRoomId}`).subscribe(
-      // this.deleteWithAuth(`chatrooms/${chatRoom._id}`).subscribe(
-        () => {
-        if (group.chatrooms && Array.isArray(group.chatrooms)) {
-          group.chatrooms = group.chatrooms.filter((c: ChatRoom) => c._id !== chatRoom._id);
-          console.log(`Chat room ${chatRoom.chatRoomName} removed from group ${group.name}`);
-        } else {
-          group.chatrooms = [];
-        }
+  
+  updateUser(user: User) {
+    this.putWithAuth<User>(`users/${user._id}`, user).subscribe(
+      (updatedUser) => {
+        const index = this.users.findIndex(u => u._id === updatedUser._id);
+        if (index !== -1) this.users[index] = updatedUser;
       },
-      (error) => console.error('Error removing chat room:', error)
+      (error) => console.error('Error updating user:', error)
     );
   }
+  
 
-  removeUserFromGroup(user: User, group: Group) {
-    this.deleteWithAuth(`groups/${group._id}/users/${user._id}`).subscribe(
-      () => {
-        this.groupUsers[group._id] = this.groupUsers[group._id].filter(u => u._id !== user._id);
-        console.log(`${user.username} removed from group ${group.name}`);
-      },
-      (error) => console.error('Error removing user from group:', error)
-    );
-  }
 
-  banUser(user: User, group: Group) {
-    this.postWithAuth(`groups/${group._id}/ban/${user._id}`, {}).subscribe(
-      () => {
-        this.groupUsers[group._id] = this.groupUsers[group._id].filter(u => u._id !== user._id);
-        console.log(`${user.username} banned from group ${group.name}`);
-      },
-      (error) => console.error('Error banning user:', error)
-    );
-  }
-
-  loadChannels() {
-    this.getWithAuth<ChatRoom[]>('chatrooms').subscribe(
-      (channels) => {
-        this.channels = channels;
-      },
-      (error) => console.error('Error loading channels:', error)
-    );
-  }
-
-  openAddChannelModal() {
-    this.showAddChannelModal = true;
-  }
-
-  cancelAddChannel() {
-    this.showAddChannelModal = false;
-    this.newChannel = { name: '', groupId: '' };
-  }
-
-  addChannel() {
-    if (this.newChannel.name && this.newChannel.groupId) {
-      this.postWithAuth<ChatRoom>('chatrooms', this.newChannel).subscribe(
-        (newChannel) => {
-          this.channels.push(newChannel);
-          this.showAddChannelModal = false;
-          this.newChannel = { name: '', groupId: '' };
-        },
-        (error) => console.error('Error adding channel:', error)
-      );
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'An unknown error occurred!';
+    if (error.error instanceof ErrorEvent) {
+      // Client-side or network error
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Backend error
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
-  }
-
-  editChannel(channel: ChatRoom) {
-    const newName = prompt('Enter new channel name:', channel.chatRoomName);
-    if (newName && newName !== channel.chatRoomName) {
-      this.putWithAuth<ChatRoom>(`chatrooms/${channel._id}`, { chatRoomName: newName }).subscribe(
-        (updatedChannel) => {
-          const index = this.channels.findIndex(c => c._id === channel._id);
-          if (index !== -1) {
-            this.channels[index] = updatedChannel;
-          }
-        },
-        (error) => console.error('Error updating channel:', error)
-      );
-    }
-  }
-
-  removeChannel(channel: ChatRoom) {
-    if (confirm(`Are you sure you want to remove the channel "${channel.chatRoomName}"?`)) {
-      this.deleteWithAuth(`chatrooms/${channel._id}`).subscribe(
-        () => {
-          this.channels = this.channels.filter(c => c._id !== channel._id);
-        },
-        (error) => console.error('Error removing channel:', error)
-      );
-    }
-  }
-
-  getGroupName(groupId: string): string {
-    const group = this.groups.find(g => g._id === groupId);
-    return group ? group.name : 'Unknown';
+    console.error(errorMessage);
+    return throwError(() => new Error(errorMessage));
   }
 
   private getWithAuth<T>(url: string): Observable<T> {
@@ -466,7 +381,7 @@ export class AdminPanelComponent implements OnInit {
   private deleteWithAuth<T>(url: string): Observable<T> {
     return this.http.delete<T>(this.authService.apiUrl + url, this.getHttpOptions());
   }
-  
+
   private putWithAuth<T>(url: string, body: any): Observable<T> {
     return this.http.put<T>(this.authService.apiUrl + url, body, this.getHttpOptions());
   }
@@ -477,7 +392,4 @@ export class AdminPanelComponent implements OnInit {
       headers: new HttpHeaders().set('Authorization', `Bearer ${token}`)
     };
   }
-
-
-
 }

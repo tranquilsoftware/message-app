@@ -1,122 +1,379 @@
-.admin-panel-container {
-    padding: 1rem;
-    background-color: #f0f2f5;
-    min-height: 100vh;
-  }
-  .admin-section {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+.admin-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 
-  .admin-section, .list-section {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  h2, h3, h4 {
-    color: #1877f2;
-    margin-bottom: 1rem;
-  }
-  .button-group {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  .admin-button {
-    background-color: #1877f2;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  .admin-button:hover {
-    background-color: #166fe5;
-  }
-  .admin-button.remove {
-    background-color: #dc3545;
-  }
-  .admin-button.remove:hover {
-    background-color: #c82333;
-  }
-  .list-section {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-top: 1rem;
-  }
-  .list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #e4e6eb;
-  }
-  .list-item:last-child {
-    border-bottom: none;
-  }
-  .group-section {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-top: 1rem;
-  }
+}
 
-  .back-button {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background-color: #1877f2;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-  }
+.card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 30px;
+  margin-bottom: 30px;
+  min-width: 300px;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 
-  .modal {
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .modal-content {
-    background-color: #fefefe;
+}
+
+.manage-groups-card {
+  margin-top: 40px;
+}
+
+.group-edit-panel, .chatroom-edit-panel {
+  /* border-left: 4px solid; */
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 0 8px 8px 0;
+
+}
+
+.group-edit-panel {
+  border-left-color: #1877f2;
+}
+
+.chatroom-edit-panel {
+  border-left-color: #ff6767;
+}
+
+h2, h3, h4 {
+  color: #1877f2;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+h3 {
+  font-size: 1.8rem;
+  border-bottom: 2px solid #e4e6eb;
+  padding-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #1877f2;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.button-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 6px 4px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: white;
+  max-width: 100px;
+  min-width: 50px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+}
+
+.btn-edit, .btn-save {
+  background-color: #007bff;
+  margin-bottom: 20px;
+  min-width: none;
+  width: 100%;
+  justify-content: center;
+  justify-items: center;
+}
+
+.btn-remove {
+  background-color: #dc3545;
+  margin-bottom: 20px;
+  min-width: none;
+  width: 100%;
+  justify-content: center;
+  justify-items: center;
+}
+
+.btn-add {
+  background-color: #28a745;
+  margin-bottom: 20px;
+  min-width: 80px;
+  width: 100%;
+  justify-content: center;
+  justify-items: center;
+}
+
+.btn-cancel {
+  background-color: #6c757d;
+  margin-bottom: 20px;
+  min-width: none;
+  width: 100%;
+  justify-content: center;
+  justify-items: center;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.add-group {
+  width: 100%;
+  margin-top: 20px;
+}
+
+
+
+.group-item, .chatroom-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e4e6eb;
+  transition: background-color 0.3s ease;
+}
+
+.group-item:hover, .chatroom-list li:hover {
+  background-color: #f7f8fa;
+}
+
+.group-item:last-child, .chatroom-list li:last-child {
+  border-bottom: none;
+}
+
+.chatroom-name {
+  font-weight: 500;
+}
+
+.chatroom-list .group-list {
+  margin-top: 15px;
+  background-color: white;
+  border-radius: 8px;
+  list-style-type: none;
+  padding: 0;
+}
+
+.chatroom-list .group-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e4e6eb;
+  transition: background-color 0.3s ease;
+  /* border-radius: 6px; */
+}
+
+
+
+.user-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e4e6eb;
+  transition: background-color 0.3s ease;
+}
+
+.user-item:hover {
+  background-color: #f7f8fa;
+}
+
+.user-item:last-child {
+  border-bottom: none;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.user-email {
+  font-size: 14px;
+  color: #65676b;
+  margin-right: 16px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: white;
+  min-width: 64px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  max-width: 100%
+;}
+
+.admin-button {
+  min-width: 128px;
+  max-width: 256px;
+}
+
+.btn-promote-group {
+  background-color: #46dc35;
+  min-width: 64px;
+  max-width: 80px;
+}
+
+.btn-promote-super {
+  background-color: #ffc800;
+  min-width: 64px;
+  max-width: 80px;
+}
+
+.btn-remove-user {
+  background-color: #dc3545;
+  min-width: 64px;
+  max-width: 80px;
+}
+
+
+
+@media (max-width: 768px) {
+  .admin-panel {
     padding: 20px;
-    border-radius: 5px;
-    width: 300px;
   }
-  
-  .modal-content h3 {
-    margin-top: 0;
+
+  .card {
+    padding: 20px;
   }
-  
-  .modal-content select,
-  .modal-content input {
-    width: 100%;
-    padding: 8px;
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  .group-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .group-name {
+    align-items: center;
+    text-align: center;
     margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
   }
-  
+
+  .button-container,
+  .button-group {
+    gap: 15px;
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    max-width: none;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: white;
+  }
+}
+
+
+/* Dark Mode Styles */
+body.dark-mode .admin-panel {
+  background-color: #18191a;
+  color: #e4e6eb;
+}
+
+body.dark-mode .card {
+  background-color: #242526;
+  box-shadow: 0 4px 6px rgba(255,255,255,0.1);
+  color: #e4e6eb;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #3a3b3c;
+  border-color: #4a4b4c;
+  color: #e4e6eb;
+}
+
+body.dark-mode button {
+  background-color: #4a4b4c;
+  color: #e4e6eb;
+}
+
+body.dark-mode button:hover {
+  background-color: #5a5b5c;
+}
+
+body.dark-mode .btn-promote-group {
+  background-color: #2a8c1f;
+}
+
+body.dark-mode .btn-promote-super {
+  background-color: #b38f00;
+}
+
+body.dark-mode .btn-delete {
+  background-color: #8b0000;
+}
