@@ -20,8 +20,9 @@ export interface Message {
 })
 export class ChatService {
 
-  constructor(private socket: SocketService) {
-  }
+  constructor(
+    private socket: SocketService
+  ) {}
 
   getSocket(): SocketService {
     return this.socket;
@@ -31,6 +32,7 @@ export class ChatService {
     this.socket.sendMessage(message);
   }
 
+  // When first joining a group chat, we have to obviously intiialize the messages first,
   getMessages(room_id: string): Observable<Message[]> {
     return this.socket.onNewMessage().pipe(toArray());
   }
@@ -77,9 +79,7 @@ export class ChatService {
 
 
 // use in phase 2
-//   getInitialMessages(room_id: string): Observable<Message[]> {
-//     this.chatService.getMessages(this.room_id);
-//   }
+
 
   // This retrieves the group room participants within a group room.
   getRoomMembers(roomId: string): Observable<string[]> { // array of group member's names
@@ -108,8 +108,6 @@ export class ChatService {
   }
 }
 
-  // When first joining a group chat, we have to obviously intiialize the messages first,
-  // //    we do that here.
 
 
 

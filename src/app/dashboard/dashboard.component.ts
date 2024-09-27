@@ -16,10 +16,8 @@ import { GroupService } from "../services/group.service";
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   groups: any[] = []; // Group list. POPULATED BYSERVER ON SUCCESSFUL GET REQUEST>:)
-  selectedGroup: Group | null = null;
   chatrooms: ChatRoom[] = [];
 
-  chatRoomDetails: { [key: string]: ChatRoom } = {};
 
   // get authenticated
   isAuthenticated$: Observable<boolean>;
@@ -43,7 +41,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         if (isAuthenticated) {
           this.loadGroups();
-          // this.loadAndLogChatRooms();
 
         }
 
@@ -61,20 +58,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
 
-  loadAndLogChatRooms(): void {
-    const chatroomUrl = 'http://localhost:5000/api/chatrooms';
-    this.http.get<ChatRoom[]>(chatroomUrl).subscribe(
-      (chatrooms): void => {
-        console.log(`All Chatrooms (${chatroomUrl}) from MongoDB:`, JSON.stringify(chatrooms, null, 2));
-
-        // this.groups.chatrooms = chatrooms;
-      },
-      (error) => {
-        console.error('Failed to load chat rooms', error);
-      }
-    );
-  }
-
   loadGroups() {
     // GET request to mongodb: mydb/groups
 
@@ -87,7 +70,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }));
 
         console.log('Groups loaded:', this.groups);
-        // this.loadChatRoomsForGroups();
 
       },
       (error) => {
@@ -125,10 +107,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.navigationService.navigateToSettings();
   }
 
-  getChatRoomName(chatRoomId: string): string {
-    return 'Loading...';
-  }
-
   // Go to /chat-[id number]
   // Open Channel/Chatroom..
   openChat(roomId: number | string): void {
@@ -148,7 +126,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
 
-  
+
 
 }
 

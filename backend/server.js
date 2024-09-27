@@ -4,6 +4,7 @@ const cors = require('cors');  // for security during requests
 
 const { PeerServer } = require('peer');
 
+// for facetime/video call
 const peerServer = PeerServer({port: 9000, path: '/peerjs'});
 
 const express = require('express');  // Server

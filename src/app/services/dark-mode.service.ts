@@ -20,19 +20,15 @@ export class DarkModeService {
   }
 
   toggleDarkMode(): void {
-    const newDarkMode = !this.darkModeSubject.value;
+    const newDarkMode = !this.getDarkModeValue();
     this.darkModeSubject.next(newDarkMode);
     this.applyDarkMode(newDarkMode);
     localStorage.setItem('dark_mode', JSON.stringify(newDarkMode));
 
   }
 
-  getDarkMode(): boolean {
+  getDarkModeValue(): boolean {
     return this.darkModeSubject.value;
-  }
-
-  getDarkModeObservable() {
-    return this.darkModeSubject.asObservable();
   }
 
   private applyDarkMode(isDarkMode: boolean): void {

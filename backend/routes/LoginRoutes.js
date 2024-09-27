@@ -14,8 +14,6 @@ router.post('/', async(req, res) => {
 
     const user = await User.findOne({username}).exec();
 
-    // Find our
-    // const user = await User.findOne({ username: req.body.username });
 
 
     // validate user

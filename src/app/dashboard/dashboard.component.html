@@ -4,8 +4,7 @@
         <h1>Groups & Channels</h1>
       </header>
 
-      <!--         populate groups last message? surely needd.  -->
-      <!--      Angular For group of every group to current user-->
+      <!--      For group of every groups -->
       <ul class="group-list">
 
         <li *ngFor="let group of groups" class="group-item">
@@ -18,11 +17,9 @@
 
 
           <ul *ngIf="group.isExpanded" class="channel-list">
-
             <li *ngFor="let chatRoom of group.chatRooms" class="channel-list" (click)="openChat(chatRoom.chatRoomId)">
               {{ chatRoom.chatRoomName }}
             </li>
-
           </ul>
 
         </li>

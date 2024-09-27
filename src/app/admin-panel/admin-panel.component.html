@@ -1,5 +1,4 @@
 <div class="admin-panel">
-  <!-- <h2>Admin Panel</h2> -->
 
   <!-- Super Admin View -->
   <div *ngIf="isSuperAdmin" class="card">
@@ -68,7 +67,7 @@
 
       <h4>Chatrooms</h4>
       <ul class="chatroom-list">
-        <li *ngFor="let chatroom of selectedGroup.chatrooms" class="chatroom-item"> 
+        <li *ngFor="let chatroom of selectedGroup.chatrooms" class="chatroom-item">
 
           <span class="chatroom-name">{{ chatroom.chatRoomName }}</span>
 

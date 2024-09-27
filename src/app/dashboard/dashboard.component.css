@@ -18,7 +18,6 @@
 
 header {
   text-align: center;
-  /*background-color: white;*/
   color: #1877f2;
   padding: 1rem;
 }
@@ -27,12 +26,11 @@ main {
   flex-grow:      1;
   overflow-y:     auto;
   padding:        1rem;
-  margin-bottom:  16rem; /* Creates space between message content and bottom-nav */
+  margin-bottom:  16rem; /* lil space between message content and bottom-nav */
 }
 
 h1 {  /* Title */
   font-size:      1.5rem;
-  /*margin:         0 0 1.5rem;*/
   padding:  1rem;
   text-align: center;
 }
@@ -84,7 +82,7 @@ body.dark-mode .group-header {
 }
 
 body.dark-mode .group-header:hover {
-  background-color: #3a3b3c;
+  background-color: #e4e4e4;
 }
 
 .group-name {
@@ -93,7 +91,7 @@ body.dark-mode .group-header:hover {
   color: #050505;
 }
 
-body.dark-mode .group-name { 
+body.dark-mode .group-name {
   color: #ffffff;
 
 }
@@ -102,11 +100,10 @@ body.dark-mode .group-name {
   display: flex;
   flex-direction: column;
   margin-bottom: 16px;
-  
+
 }
 
-.group-item.expanded .channel-list {
-  /*max-height: 500px;*/
+.group-item.expanded  {
   transition: max-height 0.5s ease-in-out;
   overflow: visible;
 }
@@ -125,21 +122,21 @@ body.dark-mode .group-name {
 }
 
 .channel-list {
-  /*max-height: 0;*/
-  background-color: #f0f2f5;
+  background-color: #c9c9c9;
   color:#050505;
   max-height: 512px;
   padding: 4px;
   overflow: visible;
-  transition: max-height 0.5s ease-out;
   list-style-type: none;  /* Remove dot point */
   border-radius:    4px;
+  transition: background-color 0.3s ease;
+
 
 }
 
 body.dark-mode .channel-list {
-  background-color: #050505 !important;
-  color:#f0f2f5 !important;
+  background-color: #050505;
+  color:#0066ff;
 }
 .channel:hover {
   background-color: #f0f2f5;
@@ -169,6 +166,7 @@ body.dark-mode .channel-list {
   object-fit: cover;
 }
 
+/* not used atm */
 .online-indicator {
   position:         absolute;
   bottom:           0;
@@ -176,7 +174,6 @@ body.dark-mode .channel-list {
   width:            18px;
   height:           18px;
   background-color: #31a24c;
-  /*border:           2px solid white;*/
   border-radius:    50%;
 
   animation:  blink 2s infinite;

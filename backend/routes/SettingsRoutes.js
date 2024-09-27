@@ -89,8 +89,7 @@ router.put('/:setting', authenticateToken, async (req, res) => {
 
 router.get('/current', authenticateToken, async (req, res) => {
   try {
-    // const user = await User.findById(req.user.userId).select('-password');
-    // grab the user, without extracting the password
+    // grab the user, without grabbing the password
     const user = await User.findById(req.userData.userId).select('-password');
 
     if (!user) {

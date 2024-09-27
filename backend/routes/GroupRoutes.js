@@ -55,7 +55,7 @@ router.post('/:groupId/chatrooms', async (req, res) => {
     const { groupId } = req.params;
     const { chatRoomName } = req.body;
 
-    
+
 
     console.log('groupId:', groupId, " then Name:", chatRoomName);
 
@@ -110,10 +110,10 @@ router.get('/:groupId/chatrooms', async (req, res) => {
 
     const groupId = Number(req.params.groupId);  // Convert to Number
     console.log('Fetching chatrooms for groupId:', groupId);
-    
+
     const chatrooms = await ChatRoom.find({ groupId });
     console.log('Found chatrooms:', chatrooms);
-    
+
     res.json(chatrooms);
   } catch (err) {
     res.status(500).json({error: err.message });
@@ -155,56 +155,6 @@ router.put('/:groupId', async (req, res) => {
 
     res.json(updatedGroup);
 
-    // const { groupId } = req.params;
-    // const { name, chatrooms, admins } = req.body;
-
-    // const group = await Group.findOne({ groupId: groupId });
-    // if (!group) {
-    //   return res.status(404).json({ message: 'Group not found' });
-    // }
-
-    // if (name) {
-    //   group.name = name;
-    // }
-
-    // if (chatrooms && Array.isArray(chatrooms)) {
-    //   for (let chatroom of chatrooms) {
-    //     const existingChatroom = await ChatRoom.findOne({ chatRoomId: chatroom.chatRoomId, groupId: groupId });
-    //     if (existingChatroom) {
-    //       existingChatroom.chatRoomName = chatroom.name;
-    //       await existingChatroom.save();
-    //     }
-    //   }
-    // }
-
-    // if (admins && Array.isArray(admins)) {
-    //   // Update group admins
-    //   const currentAdmins = await User.find({ adminInGroups: groupId });
-    //   for (let admin of currentAdmins) {
-    //     if (!admins.includes(admin._id.toString())) {
-    //       admin.adminInGroups = admin.adminInGroups.filter(g => g !== groupId);
-    //       await admin.save();
-    //     }
-    //   }
-    //   for (let adminId of admins) {
-    //     const user = await User.findById(adminId);
-    //     if (user && !user.adminInGroups.includes(groupId)) {
-    //       user.adminInGroups.push(groupId);
-    //       if (!user.roles.includes('groupAdmin')) {
-    //         user.roles.push('groupAdmin');
-    //       }
-    //       await user.save();
-    //     }
-    //   }
-    // }
-
-    // await group.save();
-
-    // const updatedGroup = await Group.findOne({ groupId: groupId })
-    //   .populate('chatrooms')
-    //   .populate('admins', 'username email');
-
-    // res.json(updatedGroup);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -230,7 +180,7 @@ router.post('/', async (req, res) => {
 
     console.log('group made: POST : ', newGroup);
 
-    // Update the current user's adminInGroups
+    // Update the current user's adminInGroups todo
     // IF U MAKE A GNEW GROUP, U SHOULD BE THE GROUPADMIN INSIDE IT.. DO THAT BELOW
     // const userId = req.user._id; // Assuming you have user info in the request
     // await User.findByIdAndUpdate(userId, {

@@ -133,8 +133,6 @@ export class AdminPanelComponent implements OnInit {
 
   // /api/chatrooms/group/:groupId
   loadGroupChatrooms(groupId: string) {
-    // this.http.get<ChatRoom[]>(`${this.apiUrl}/groups/${groupId}/chatrooms`)
-
     this.http.get<ChatRoom[]>(`${this.apiUrl}/chatrooms/group/${groupId}`)
     .pipe(catchError(this.handleError))
       .subscribe({
@@ -233,7 +231,6 @@ export class AdminPanelComponent implements OnInit {
 
   removeChatroom(chatroom: ChatRoom) {
     if (this.selectedGroup && confirm(`Are you sure you want to remove the chatroom "${chatroom.chatRoomName}"?`)) {
-                                       // api/groups/:groupId/chatrooms/:chatRoomId'
             this.http.delete(`${this.apiUrl}/groups/${this.selectedGroup.groupId}/chatrooms/${chatroom.chatRoomId}`)
         .pipe(catchError(this.handleError))
         .subscribe(
@@ -288,6 +285,7 @@ export class AdminPanelComponent implements OnInit {
   }
 
   promoteToGroupAdmin(user: User) {
+    // Request user to type in groupId to be admin of
     const groupId = prompt('Enter the Group ID to promote this user as admin:');
     if (!groupId) return;
 
@@ -336,6 +334,7 @@ export class AdminPanelComponent implements OnInit {
   }
 
 
+  // USER CREATE/EDIT FUNCTIONS ARE HERE, BUT NOT YET IMPLEMENTED - HERE FOR FUTURE USE
   createUser(user: User) {
     this.postWithAuth<User>('users', user).subscribe(
       (newUser) => {
@@ -344,7 +343,7 @@ export class AdminPanelComponent implements OnInit {
       (error) => console.error('Error creating user:', error)
     );
   }
-  
+
   updateUser(user: User) {
     this.putWithAuth<User>(`users/${user._id}`, user).subscribe(
       (updatedUser) => {
@@ -354,8 +353,8 @@ export class AdminPanelComponent implements OnInit {
       (error) => console.error('Error updating user:', error)
     );
   }
-  
 
+  // Handle Error logging etc
 
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'An unknown error occurred!';
@@ -369,6 +368,8 @@ export class AdminPanelComponent implements OnInit {
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
+
+  // Admin Panel Routing !
 
   private getWithAuth<T>(url: string): Observable<T> {
     return this.http.get<T>(this.authService.apiUrl + url, this.getHttpOptions());

@@ -19,7 +19,7 @@ export class SettingsComponent implements OnInit {
     email:          '',     // Users email address.
     birthdate:      '',     // String of users birthdate
     profile_pic:    '',     // Path to profile picture on web server
-    dark_mode:      false,  // TODO: implement dark mode (changes to css styling)
+    dark_mode:      false,
     notifications:  true    // todo: this is a placeholder for notifications to  be sent the the user, in some form of wahy.;
   }
 
@@ -27,7 +27,6 @@ export class SettingsComponent implements OnInit {
   isSuperAdmin: boolean = false;
   isUploadingProfilePicture: boolean = false;
 
-  // TODO Implement maybe: show timestamps on messages, notifications?
   constructor(
     public authenticationService: AuthenticationService,
     public navigationService: NavigationService,
@@ -43,7 +42,7 @@ export class SettingsComponent implements OnInit {
     this.authenticationService.hasRole('groupAdmin').subscribe(isGroupAdmin => {
       this.isGroupAdmin = isGroupAdmin;
     });
-    
+
     this.authenticationService.hasRole('super').subscribe(isSuperAdmin => {
       this.isSuperAdmin = isSuperAdmin;
     });

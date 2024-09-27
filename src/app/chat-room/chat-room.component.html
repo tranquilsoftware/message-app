@@ -1,26 +1,47 @@
-<!--    Old MessageApp individual users concept -->
-<!--    <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">-->
-<!--      <div class="dashboard-container">-->
-<!--        <div class="dashboard-content">-->
-<!--          <header>-->
-<!--            <h1>Messages</h1>-->
-<!--          </header>-->
+<div class="chat-container" >
+  <div class="chat-header">
 
-<!--          <ul class="message-list">-->
-<!--            <li *ngFor="let message of messages" (click)="openChat(message.chat_id)" class="message-item">-->
-<!--              <div class="avatar-container">-->
-<!--                <img [src]="message.avatar" [alt]="message.name" class="avatar">-->
-<!--                <span *ngIf="message.online" class="online-indicator"></span>-->
-<!--              </div>-->
-<!--              <div class="message-content">-->
-<!--                <h3>{{ message.name }}</h3>-->
-<!--                <p>{{ message.last_msg }}</p>-->
-<!--              </div>-->
-<!--              <div class="message-meta">-->
-<!--                <span *ngIf="message.unread" class="unread-badge">{{ message.unread }}</span>-->
-<!--              </div>-->
-<!--            </li>-->
-<!--          </ul>-->
-<!--        </div>-->
+    <!--        BACK TO DASHBOARD-->
+    <button class="back-button" (click)="goToDashboard()">
+      <!-- SVG Of Left Arrow Icon -->
 
-<!--    </ng-container>-->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+
+    <!--    People In Room    -->
+    <div class="chat-info">
+      <h2>{{ chatRoomName }}</h2>
+    </div>
+
+
+
+    <!--        VIDEO CALL BUTTON-->
+    <button class="video-call-button" (click)="startVideoChat()">
+      <!-- SVG Of Video Camera Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7"/>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+      </svg>
+    </button>
+  </div>
+
+
+  <!--       Attempt at drawing messages on screen.. -->
+  <div class="chat-messages-container">
+    <div *ngFor="let message of messages"
+         [ngClass]="{'message': true, 'sent': isCurrentUser(message.senderId.username), 'received': !isCurrentUser(message.senderId.username)}">
+      <div class="message-content">{{ message.msgContent }}</div>
+      <div *ngIf="settingsService.showTimestampOnMessages" class="message-timestamp">{{ formatTimestamp(message.timestamp) }}</div>
+    </div>
+  </div>
+
+<!--  Message Input UI Form-->
+  <div class="chat-input">
+    <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type something here...">
+    <button (click)="sendMessage()">Send</button>
+  </div>
+</div>

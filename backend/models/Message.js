@@ -9,7 +9,6 @@ const messageSchema = new Schema({
     required: true,
   },
 
-  // TODO setup so it seemlessly integrates with User model
   senderId: { // Sent by user ID..
     type: new Schema({
       username: { type: String, required: true },

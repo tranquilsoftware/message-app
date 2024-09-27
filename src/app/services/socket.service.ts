@@ -53,8 +53,6 @@ export class SocketService {
   onNewMessage(): Observable<Message> {
     return new Observable(observer => {
       this.socket.on('new-message', (message: Message) => {
-        // message.token = this.authenticationService.getToken();
-        // do we need tokens in message rn? prob not
 
         observer.next(message);
       });

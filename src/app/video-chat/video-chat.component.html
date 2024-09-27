@@ -1,0 +1,18 @@
+<div class="video-chat-container">
+  <div class="video-container">
+    
+    <!-- User/Your webcam -->
+    <div class="video-wrapper">
+      <video #localVideo autoplay playsinline></video>
+    </div>
+
+    <!-- Other Users webcam -->
+    <div class="video-wrapper">
+      <video #remoteVideo autoplay playsinline></video>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="start-call" (click)="startCall()">Start Call</button>
+    <button class="end-call" (click)="endCall()">End Call</button>
+  </div>
+</div>

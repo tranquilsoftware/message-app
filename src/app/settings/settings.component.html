@@ -43,8 +43,7 @@
           </label>
         </div>
 
-<!--        Admin Panel Button
-        *ngIf="userIsSuperAdmin" or if user.roles.contains('super')            -->
+<!--        Admin Panel Button            -->
         <div class="setting-item" *ngIf="isGroupAdmin || isSuperAdmin">
           <button (click)="navigationService.navigateToAdminPanel()">Go to Admin Panel</button>
         </div>

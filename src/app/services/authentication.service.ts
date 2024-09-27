@@ -4,8 +4,6 @@ import {Observable, of, BehaviorSubject, switchMap, throwError} from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Router } from "@angular/router";
 
-import { JwtHelperService } from '@auth0/angular-jwt';
-
 //client side interface models
 export interface AuthResponse {
   token: string;
@@ -65,8 +63,6 @@ export class AuthenticationService {
   public  apiUrl = 'http://localhost:5000/api/';
   private authStatusSubject = new BehaviorSubject<boolean>(this.isTokenValid());
 
-  private jwtHelper: JwtHelperService;
-
 
   // current user data types
   private currentUserIdSubject: BehaviorSubject<string | null>;
@@ -77,9 +73,8 @@ export class AuthenticationService {
 
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private router: Router) {
-    this.jwtHelper = new JwtHelperService();
     this.checkAuthStatus();
 
     const localisedUserId = localStorage.getItem('current_user_id');
@@ -145,7 +140,6 @@ export class AuthenticationService {
   }
 
   // Token Validation..
-
   private isTokenValid(): boolean {
     const token = this.getToken();
 
@@ -154,33 +148,25 @@ export class AuthenticationService {
       return false;
     }
 
-    // const result = token !== null && token !== '';
-
-    // console.log('Token result: [', result, ']');
-
-    // // Return true if token; isn't null, has a string of characters, AND valid with JWT
-    // return token !== null && token !== '';
     try {
-      // Check if the token is expired
-      if (this.jwtHelper.isTokenExpired(token)) {
+      const decodedToken = this.jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (!decodedToken.exp || decodedToken.exp < currentTime) {
         console.log('Token is expired');
         return false;
       }
 
-      // Decode the token and verify its structure
-      const decodedToken = this.jwtHelper.decodeToken(token);
-      if (!decodedToken || !decodedToken.userId) {
-        console.log('Token is invalid or missing required claims');
-        return false;
-      }
-
       console.log('Token is valid');
+     // Return true if token; isn't null, has a string of characters, AND valid with JWT
+
       return true;
     } catch (error) {
       console.error('Error validating token:', error);
       return false;
     }
   }
+
 
   isTokenExpired(): boolean {
     return !this.isTokenValid();
@@ -230,7 +216,6 @@ export class AuthenticationService {
   }
 
 
-//TODO fixup -- MongoDB To accept pp
   uploadProfilePicture(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('profile_picture', file);
@@ -244,7 +229,6 @@ export class AuthenticationService {
       tap((response:any) => {
         console.log('Profile picture was uploaded successfully! :D.\n Response URL: ', response.url);
 
-        // Make UserSettingRoutes.js handle the server-side stuff..
       }),
 
       catchError((error) => {
@@ -276,11 +260,6 @@ export class AuthenticationService {
     return this.currentUserIdSubject.value;
   }
 
-  // public getCurrentUserId() {
-  //   const userId = this.currentUserIdValue;
-  //   console.log('(getCurrentUserId) - User ID:', userId);
-  //   return userId;
-  // }
   public getCurrentUserId(): string | null {
     const token = this.getToken();
     if (!token) {
@@ -342,21 +321,14 @@ export class AuthenticationService {
       map(user => user ? user.roles.includes(role) : false)
     );
   }
-  
+
   getAdminGroups(): Observable<string[]> {
     return this.getCurrentUser().pipe(
       map(user => user ? user.adminInGroups : [])
     );
   }
 
-  updateCurrentUser(user: User): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}users/${user._id}`, user).pipe(
-      tap(updatedUser => {
-        // Update the stored user information
-        this.currentUser = updatedUser;
-      })
-    );
-  }
+
 }
 
 
