@@ -7,6 +7,7 @@ import { Observable, forkJoin, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { NavigationService } from '../services/navigation.service';
 import { ChatService } from '../services/chat.service';
+import { GroupService } from '../services/group.service';
 import * as toastr from "toastr";
 import { Router } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
@@ -32,15 +33,27 @@ export class AdminPanelComponent implements OnInit {
   showingGroups: boolean = false;
   users: User[] = [];
 
+  // accept/reject user join requests
+  pendingRequests: any[] = [];
+
+  // make new user form
+  showingAddUserForm = false;
+  newUser: any = {};
+  showingGroupAdminForm: boolean = false;
+  selectedUser: User | null = null;
+  groupIdOrName: string = '';
+
+
   constructor(
     private authService: AuthenticationService,
     private http: HttpClient,
-    private chatService: ChatService,
+    private groupService: GroupService,
     private navigationService: NavigationService
   ) {}
 
   ngOnInit() {
     this.checkUserRole();
+    this.loadPendingRequests();
   }
 
   checkUserRole() {
@@ -60,6 +73,13 @@ export class AdminPanelComponent implements OnInit {
         } else {
           this.navigationService.navigateToDashboard();
         }
+
+        // Load pending requests for both super admins and group admins
+        if (this.isSuperAdmin || this.isGroupAdmin) {
+          console.log('Loading pending requests...');
+          this.loadPendingRequests();
+        }
+
       },
       error: (error) => {
         console.error('Error checking user role', error);
@@ -69,8 +89,68 @@ export class AdminPanelComponent implements OnInit {
     });
   }
 
+
+  // Group Admin Requests And Approval
+  loadPendingRequests() {
+    console.log('AdminPanelComponent: Starting to load pending requests');
+    console.log('isSuperAdmin:', this.isSuperAdmin, 'isGroupAdmin:', this.isGroupAdmin);
+    if (this.isSuperAdmin || this.isGroupAdmin) {
+      console.log('AdminPanelComponent: User is authorized to view pending requests');
+      this.groupService.getPendingRequests().subscribe(
+        requests => {
+          this.pendingRequests = requests.flatMap(group => 
+            group.pendingRequests.map((user: User) => ({
+              groupId: group.groupId,
+              groupName: group.name,
+              userId: user._id,
+              username: user.username,
+              email: user.email,
+              profile_pic: user.profile_pic || './img/default_user.png'
+            }))
+          );
+          console.log('AdminPanelComponent: Pending requests loaded:', this.pendingRequests);
+        },
+        error => {
+          console.error('AdminPanelComponent: Error loading pending requests', error);
+          if (error.status === 404) {
+            console.error('AdminPanelComponent: 404 error - Route not found');
+          }
+          toastr.error('Failed to load pending join requests. Please try again.');
+        }
+      );
+    } else {
+      console.log('AdminPanelComponent: User is NOT authorized to view pending requests');
+    }
+  }
+
+  approveRequest(request: any) {
+    this.groupService.approveJoinRequest(request.groupId, request.userId).subscribe(
+      () => {
+        this.loadPendingRequests();
+        toastr.success('Request approved successfully');
+      },
+      error => {
+        console.error('Error approving request', error);
+        toastr.error('Failed to approve request. Please try again.');
+      }
+    );
+  }
+
+  rejectRequest(request: any) {
+    this.groupService.rejectJoinRequest(request.groupId, request.userId).subscribe(
+      () => {
+        this.loadPendingRequests();
+        toastr.success('Request rejected successfully');
+      },
+      error => {
+        console.error('Error rejecting request', error);
+        toastr.error('Failed to reject request. Please try again.');
+      }
+    );
+  }
+
   loadAllGroups() {
-    this.http.get<Group[]>(`${this.apiUrl}/groups`)
+    this.http.get<Group[]>(`${this.apiUrl}/groups/`)
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (groups) => {
@@ -114,11 +194,29 @@ export class AdminPanelComponent implements OnInit {
   showUsers() {
     this.showingUsers = true;
     this.showingGroups = false;
+
+    // Scroll down to users section
+    setTimeout(() => {
+      const groupListElement = document.querySelector('.user-list');
+      if (groupListElement) {
+        groupListElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   showGroups() {
     this.showingGroups = true;
     this.showingUsers = false;
+
+
+    // Scroll down to groups section
+    setTimeout(() => {
+      const groupListElement = document.querySelector('.group-list');
+      if (groupListElement) {
+        groupListElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+
   }
 
   editGroup(group: Group) {
@@ -126,8 +224,13 @@ export class AdminPanelComponent implements OnInit {
     this.selectedChatroom = null;
     this.loadGroupChatrooms(group.groupId);
 
-    // scroll down
-    setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
+    // Scroll down to the group edit panel
+    setTimeout(() => {
+      const bottomComponent = document.querySelector('.admin-panel > *:last-child');
+      if (bottomComponent) {
+        bottomComponent.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    }, 100);
   }
 
 
@@ -146,17 +249,23 @@ export class AdminPanelComponent implements OnInit {
       });
   }
 
+
+  // make the empty group form, (for the user to fill out)
   addGroup() {
     this.selectedGroup = {
       _id: '',
       groupId: '',
       name: '',
       chatrooms: [],
+      members: [],
+      admins: [],
+      pendingRequests: [],
       isExpanded: false
     };
     this.selectedChatroom = null;
   }
 
+  // show dialog (are you sure you want to delete this group?)
   removeGroup(group: Group) {
     if (confirm(`Are you sure you want to remove the group "${group.name}"?`)) {
       this.http.delete(`${this.apiUrl}/groups/${group.groupId}`)
@@ -173,36 +282,44 @@ export class AdminPanelComponent implements OnInit {
         );
     }
   }
-
+  
+  // post to server to make a new group or update an existing group
   updateGroup() {
     if (this.selectedGroup) {
       const isNewGroup = !this.selectedGroup.groupId;
-      const url = isNewGroup ? `${this.apiUrl}/groups` : `${this.apiUrl}/groups/${this.selectedGroup.groupId}`;
-      const method = isNewGroup ? 'post' : 'put';
-
-      this.http.request<Group>(method, url, { body: this.selectedGroup })
+      const url = `${this.apiUrl}/groups/${this.selectedGroup.groupId}`;
+      const method = isNewGroup ? 'post' : 'put'; // either create or update a group
+  
+      // Prepare the group data
+      const groupData = {
+        name: this.selectedGroup.name,
+        admins: this.selectedGroup.admins,
+        members: this.selectedGroup.members,
+        pendingRequests: this.selectedGroup.pendingRequests,
+        chatrooms: this.selectedGroup.chatrooms.map(chatroom => chatroom._id)
+      };
+  
+      this.http.request<Group>(method, url, { body: groupData })
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (updatedGroup: Group) => {
             if (isNewGroup) {
               this.groups.push(updatedGroup);
+              
             } else {
               const index = this.groups.findIndex(g => g.groupId === updatedGroup.groupId);
               if (index !== -1) {
                 this.groups[index] = updatedGroup;
               }
             }
-            this.selectedGroup = null;
             toastr.success(`Successfully ${isNewGroup ? 'added' : 'updated'} group: ${updatedGroup.name}`);
+            this.selectedGroup = null;
           },
           error: (error) => {
             console.error(`Failed to ${isNewGroup ? 'add' : 'update'} group`, error);
             toastr.error(`Failed to ${isNewGroup ? 'add' : 'update'} group. Please try again.`);
           }
         });
-    } else {
-      console.error('No group selected');
-      toastr.error('Unable to update group: No group selected');
     }
   }
 
@@ -260,6 +377,7 @@ export class AdminPanelComponent implements OnInit {
           next: (updatedChatroom: ChatRoom) => {
             if (isNewChatroom) {
               this.selectedGroup!.chatrooms.push(updatedChatroom);
+              console.log('Chatroom created successfully!:', updatedChatroom);
             } else {
               const index = this.selectedGroup!.chatrooms.findIndex(c => c.chatRoomId === updatedChatroom.chatRoomId);
               if (index !== -1) {
@@ -284,12 +402,8 @@ export class AdminPanelComponent implements OnInit {
     this.selectedChatroom = null;
   }
 
-  promoteToGroupAdmin(user: User) {
-    // Request user to type in groupId to be admin of
-    const groupId = prompt('Enter the Group ID to promote this user as admin:');
-    if (!groupId) return;
-
-    this.postWithAuth<User>(`users/${user._id}/promote-group-admin/${groupId}`, {}).subscribe(
+  promoteToGroupAdmin(user: User, groupIdOrName: string) {
+    this.postWithAuth<User>(`users/${user._id}/promote-group-admin`, { groupIdOrName }).subscribe(
       (updatedUser: User) => {
         if (!user.roles) {
           user.roles = [];
@@ -300,12 +414,15 @@ export class AdminPanelComponent implements OnInit {
         if (!user.adminInGroups) {
           user.adminInGroups = [];
         }
-        if (!user.adminInGroups.includes(groupId)) {
-          user.adminInGroups.push(groupId);
+        if (!user.adminInGroups.includes(groupIdOrName)) {
+          user.adminInGroups.push(groupIdOrName);
         }
-        console.log(`${user.username} promoted to Group Admin for group ${groupId}`);
+        toastr.success(`${user.username} promoted to Group Admin for group ${groupIdOrName}`);
       },
-      (error) => console.error('Error promoting user to Group Admin:', error)
+      (error) => {
+        console.error('Error promoting user to Group Admin:', error);
+        toastr.error('Failed to promote user to Group Admin');
+      }
     );
   }
 
@@ -339,8 +456,12 @@ export class AdminPanelComponent implements OnInit {
     this.postWithAuth<User>('users', user).subscribe(
       (newUser) => {
         this.users.push(newUser);
+        toastr.success(`User ${newUser.username} created successfully`);
       },
-      (error) => console.error('Error creating user:', error)
+      (error) => {
+        console.error('Error creating user:', error);
+        toastr.error('Failed to create user. Please try again.');
+      }
     );
   }
 
@@ -352,6 +473,27 @@ export class AdminPanelComponent implements OnInit {
       },
       (error) => console.error('Error updating user:', error)
     );
+  }
+
+  // Add New User
+  showAddUserForm() {
+    this.showingAddUserForm = true;
+    this.newUser = {};
+  }
+
+  cancelAddUser() {
+    this.showingAddUserForm = false;
+    this.newUser = {};
+  }
+
+  addUser() {
+    if (this.newUser.username && this.newUser.email && this.newUser.password) {
+      this.createUser(this.newUser);
+      this.showingAddUserForm = false;
+      this.newUser = {};
+    } else {
+      toastr.error('Please fill in all required fields', 'Validation Error');
+    }
   }
 
   // Handle Error logging etc
@@ -393,4 +535,57 @@ export class AdminPanelComponent implements OnInit {
       headers: new HttpHeaders().set('Authorization', `Bearer ${token}`)
     };
   }
+
+  showPromoteToGroupAdminForm(user: User) {
+    this.showingGroupAdminForm = true;
+    this.selectedUser = user;
+    this.groupIdOrName = '';
+    // Scroll to the form
+    setTimeout(() => {
+      const formElement = document.querySelector('.group-admin-form');
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
+  confirmPromoteToGroupAdmin(user: User) {
+    if (this.groupIdOrName) {
+      this.promoteToGroupAdmin(user, this.groupIdOrName);
+      this.cancelPromoteToGroupAdmin();
+    } else {
+      toastr.error('Please enter a Group ID or Name');
+    }
+  }
+
+  cancelPromoteToGroupAdmin() {
+    this.showingGroupAdminForm = false;
+    this.selectedUser = null;
+    this.groupIdOrName = '';
+  }
+
+  createNewGroup() {
+    const newGroup: Partial<Group> = {
+      name: 'New Group',
+      chatrooms: [],
+      members: [],
+      admins: [],
+      pendingRequests: []
+    };
+
+    this.groupService.createGroup(newGroup).subscribe({
+      next: (createdGroup: Group) => {
+        this.groups.push(createdGroup);
+        this.selectedGroup = createdGroup;
+        console.log('Group created successfully:', createdGroup);
+        toastr.success('Group created successfully');
+      },
+      error: (error) => {
+        console.error('Failed to create group', error);
+        toastr.error('Failed to create group. Please try again.');
+      }
+    });
+  }
+
+
 }

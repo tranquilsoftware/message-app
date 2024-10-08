@@ -59,6 +59,11 @@ body.dark-mode {
   color: #e4e6eb;
 }
 
+body.dark-mode .card {
+  background-color: #121212;
+  color: #e4e6eb;
+}
+
 body.dark-mode .container {
   background-color: #242526;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -83,6 +88,14 @@ body.dark-mode button:hover {
   background-color: #555;
 }
 
+body.dark-mode btn {
+  background-color: #3a3b3c;
+  color: #e4e6eb;
+}
+body.dark-mode btn:hover {
+  background-color: #555;
+}
+
 body.dark-mode header {
   background-color: #18191a;
   color: #e4e6eb;
@@ -102,3 +115,63 @@ body.dark-mode .bottom-nav {
   background-color: #1e1e1e;
   border-top: 1px solid #333;
 }
+
+body.dark-mode .user-item:hover,
+body.dark-mode .group-item:hover,
+body.dark-mode .chatroom-list li:hover {
+  background-color: #3a3b3c;
+}
+
+body.dark-mode .group-header,
+body.dark-mode .settings-section {
+  background-color: #242526;
+  color: #e4e6eb;
+  padding: 4px;
+  border: 1px solid #3a3b3c;
+}
+body.dark-mode .channel-list {
+  background-color: #242526;
+  padding: 12px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  color: #e4e6eb;
+  border: 1px solid #3a3b3c;
+}
+
+body.dark-mode .group-header:hover {
+  background-color: #5e5e5e;
+}
+
+body.dark-mode .channel-list li:hover {
+  background-color: #3a3b3c;
+}
+
+
+/* Dark Mode Login*/
+body.dark-mode .login-container {
+  background-color: #212121;
+}
+
+body.dark-mode .register-text span {
+  /*background-color: #212121;*/
+  color: white;
+}
+
+/* Chat Room Dark Mode Styling */
+body.dark-mode .back-button,
+body.dark-mode .video-call-button,
+body.dark-mode .chat-messages-container,
+body.dark-mode .chat-header {
+  background-color: #3a3a3a;
+}
+
+body.dark-mode .chat-input {
+  border: 1px solid #131313;
+  background-color: #3a3a3a;
+
+}
+
+/*body.dark-mode .back-button,*/
+/*body.dark-mode .video-call-button {*/
+/*  background-color: #3a3a3a;*/
+/*}*/

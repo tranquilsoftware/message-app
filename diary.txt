@@ -155,3 +155,15 @@ so uploading profile picture works, HOWEVER, when u upload a new pic, the server
 
 TODO BUG
 The file is on the local system (server), however its returning a 404, its as if the server needs to be refreshed, or something.
+
+
+
+29/09
+
+implementing request to join group functionality.
+
+bug where route of /api/groups/pending-requests was not being reached. found that it was reaching /api/groups/ and not reaching what we had intended. Provided /admin/ behind the routes we need and it now works.
+
+8/10
+
+some reason when a new message is sent and socket received it, it no longer automatically shows on screen?

@@ -16,9 +16,8 @@ const authenticateToken = (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
 
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+
     console.log('(authenticateToken) Decoded token :', decodedToken);
-
-
 
     req.userData = {
       userId: decodedToken.userId,
@@ -26,7 +25,7 @@ const authenticateToken = (req, res, next) => {
       username: decodedToken.username
     };
 
-    console.log('SET req.userData :', req.userData);
+    // console.log('SET req.userData :', req.userData);
 
     next(); // Proceed to next middleware or route handling operation
   } catch(error) {

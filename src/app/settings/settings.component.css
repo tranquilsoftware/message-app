@@ -183,6 +183,8 @@ input:checked + .slider:before {
 
 
 /* Dark Mode Styles*/
+
+
 body.dark-mode .settings-dashboard {
   background-color: #121212;
 }

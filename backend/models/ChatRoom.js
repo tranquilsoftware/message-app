@@ -22,10 +22,7 @@ const chatRoomSchema = new Schema({
     unique: true
   },
 
-  // members: [{
-  //   type: String,
-  //   // ref: 'User' // Reference to the User model
-  // }],
+  // members is in group model.. not here..
 
   // lastMessage: [{
   //   type: Schema.Types.ObjectId,

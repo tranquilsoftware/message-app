@@ -8,7 +8,7 @@ import {AuthenticationService, User} from "../services/authentication.service";
 import {NavigationService} from "../services/navigation.service";
 import {SettingsService} from "../settings.service";
 import {DarkModeService} from "../services/dark-mode.service";
-
+import { ChangeDetectorRef } from '@angular/core'; // for updating a new message on chat room
 
 
 @Component({
@@ -25,8 +25,10 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   newMessage:   string = ''; // user message in message box..
   chatRoomName: string = '';
   showVideoChat: boolean = false;
+  roomMembers: { username: string; profile_pic: string }[] = [];
 
   private messageSubscription: Subscription | undefined;
+  private messageErrorSubscription: Subscription | undefined;
 
   // Constructor
   constructor(
@@ -35,13 +37,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     private navigationService: NavigationService,
     private chatService: ChatService,
     public authenticationService: AuthenticationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
 
   // Inherited function overrides
   ngOnInit(): void {
     // connect to socket. (likely disconnected)
-    this.chatService.getSocket().connect();
+    // this.chatService.getSocket().connect();
+    this.ensureSocketConnection();
+
+    console.log('Socket connected:', this.chatService.getSocket().isConnected());
 
     // join room
     this.chatRoomId = this.route.snapshot.paramMap.get('id') || '';
@@ -54,10 +60,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.loadInitialMessages();
 
     // load chat rooms initial msgs from db
-    this.chatService.getSocket().getSocket().on('initial-messages', (messages) => {
+    this.chatService.getSocket().getSocket().on('initial-messages', (messages: Message[]) => {
       this.messages = messages;
     });
 
+    // fetch room members
+    this.fetchRoomMembers();
 
     // ask from sockets
     this.listenForNewMessages();
@@ -76,6 +84,20 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.chatService.leaveRoom(this.chatRoomId);
 
     this.chatService.getSocket().disconnect();
+  }
+
+
+  private ensureSocketConnection() {
+    if (!this.chatService.isConnected()) {
+      this.chatService.reconnect().subscribe({
+        next: () => {
+          console.log('Socket reconnected successfully');
+        },
+        error: (error) => {
+          console.error('Failed to reconnect socket:', error);
+        }
+      });
+    }
   }
 
 
@@ -103,11 +125,20 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
     this.messageSubscription = this.chatService.onNewMessage().subscribe(
       (message: Message) => {
+        console.log('Received new message:', message);
+
         if (message.chatRoomId === this.chatRoomId) {
+
           message.timestamp = new Date(message.timestamp);
           this.messages.push(message);
           this.scrollToBottom();
+          this.cdr.detectChanges();
+
+          console.log('Updated messages array with:', message);
         }
+      },
+      (error) => {
+        console.error('Error subscribing to new messages:', error);
       }
     );
   }
@@ -118,6 +149,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       return console.log('Message is empty, not sending');
     }
 
+    if (!this.chatService.isConnected()) {
+      console.error('Cannot send message: Socket not connected');
+
+      console.log('Socket is not connected, reconnecting...');
+      this.ensureSocketConnection();
+    }
     const currentUserId = this.authenticationService.getCurrentUserId();
     if (!currentUserId) {
       return console.error('User is not authenticated');
@@ -158,7 +195,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     return userId === this.authenticationService.getCurrentUserId();
   }
 
-  // For when we receive a new message, from socket..
+  // For when we receive a new message, from socket.. scroll to the bottom inside the message container
   private scrollToBottom() {
     setTimeout(() => {
       const chatContainer = document.querySelector('.chat-messages-container');
@@ -210,6 +247,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   }
 
+  fetchRoomMembers(): void {
+    this.chatService.getRoomMembers(this.chatRoomId).subscribe(
+      (members) => {
+        this.roomMembers = members;
+        console.log('Room members:', this.roomMembers);
+      },
+      (error) => {
+        console.error('Error fetching room members:', error);
+      }
+    );
+  }
 
   // VIDEO CHAT METHODS
 

@@ -13,6 +13,16 @@
 
     <!--    People In Room    -->
     <div class="chat-info">
+      
+      <div class="room-members">
+        <ul>
+          <li *ngFor="let member of roomMembers">
+            <img [src]="member.profile_pic" alt="{{ member.username }}'s profile picture">
+            {{ member.username }}
+          </li>
+        </ul>
+      </div>
+
       <h2>{{ chatRoomName }}</h2>
     </div>
 

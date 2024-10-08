@@ -1,6 +1,11 @@
 <div class="video-chat-container">
   <div class="video-container">
-    
+
+    <!-- Display Error if there was one that occurred -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
     <!-- User/Your webcam -->
     <div class="video-wrapper">
       <video #localVideo autoplay playsinline></video>

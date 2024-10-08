@@ -32,8 +32,8 @@
     "peer": "^1.0.2",
     "peerjs": "^1.5.4",
     "rxjs": "~7.8.0",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.0",
     "toastr": "^2.1.4",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
@@ -49,6 +49,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "mocha": "^10.7.3",
     "typescript": "~5.5.2"
   }
 }

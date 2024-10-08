@@ -28,7 +28,9 @@ export interface Group {
   name: string;
   chatrooms: ChatRoom[];
   isExpanded: boolean; // Client sided, if user wants to open group this is true.
-
+  members: User[];
+  admins: User[];
+  pendingRequests: User[];
 }
 
 
@@ -39,8 +41,6 @@ export interface ChatRoom {
   chatRoomName: string; // the unique channel/chatroom name
   chatRoomId: string;
   createdAt: string;
-  // visible: boolean; // Client sided used for nice transitions .
-  // members: string[];
   // lastMessage: string | null;
 }
 
@@ -53,6 +53,8 @@ export interface User {
   groups: string[];
   adminInGroups: string[];
 }
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -67,7 +69,6 @@ export class AuthenticationService {
   // current user data types
   private currentUserIdSubject: BehaviorSubject<string | null>;
 
-  private currentUser: User | null = null;
   public currentUserId:  Observable<string | null>; // this gets set on login.it is the _id attribute of the user.
 
 
@@ -131,7 +132,6 @@ export class AuthenticationService {
     localStorage.removeItem('dark_mode')
 
     this.currentUserIdSubject.next(null);
-    this.currentUser = null;
 
     this.authStatusSubject.next(false);
 

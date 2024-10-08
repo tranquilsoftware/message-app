@@ -3,11 +3,12 @@ import { ChatService } from '../services/chat.service';
 import Peer, { MediaConnection } from 'peerjs';
 import { NavigationService } from '../services/navigation.service';
 import { ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-video-chat',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './video-chat.component.html',
   styleUrl: './video-chat.component.css'
 })
@@ -15,21 +16,25 @@ export class VideoChatComponent implements OnInit {
   @ViewChild('localVideo') localVideo!: ElementRef;
   @ViewChild('remoteVideo') remoteVideo!: ElementRef;
 
-  private peer: Peer | null = null;
-  private localStream: MediaStream | null = null;
-  private roomId: string;
+  private peer: Peer;
+  private localStream: MediaStream | null = null; // my webcam
+  private remoteStream: MediaStream | null = null; // their webcam
+  private currentCall: MediaConnection | null = null; 
+  private roomId: string = '';
+
+  public errorMessage: string = '';
 
   constructor(
     private chatService: ChatService,
+    private navigationService: NavigationService,
     private route: ActivatedRoute
   ) {
-    this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
-
+    this.peer = new Peer();
   }
 
 ngOnInit() {
+  this.roomId = this.route.snapshot.paramMap.get('roomId') || '';
   this.initializePeer();
-  
 }
 
 private initializePeer() {
@@ -37,27 +42,15 @@ private initializePeer() {
 
   this.peer.on('open', (id: string) => {
     console.log('My peer ID is: ' + id);
-    // You can emit this ID to the server to associate it with the user
     this.chatService.emitPeerId(id);
   });
 
-  this.peer.on('call', (call: MediaConnection) => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((stream: MediaStream) => {
-        this.localStream = stream;
-        this.localVideo.nativeElement.srcObject = stream;
-        call.answer(stream);
-        call.on('stream', (remoteStream: MediaStream) => {
-          this.remoteVideo.nativeElement.srcObject = remoteStream;
-        });
-      })
-      .catch((err) => {
-        console.error('Failed to get local stream', err);
-      });
+  this.peer.on('call', (call) => {
+    this.listenForCalls(call);
   });
 }
 
-  startCall() {
+  async startCall(): Promise<void> {
     const remotePeerId = prompt('Enter the peer ID to call:');
     if (remotePeerId) {
       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -71,11 +64,36 @@ private initializePeer() {
         })
         .catch((err) => {
           console.error('Failed to get local stream', err);
+          this.errorMessage = 'Failed to access local camera and mic.';
         });
     }
   }
 
+  private async listenForCalls(call: MediaConnection): Promise<void> {
+    if (!this.localStream) {
+      await this.startCall();
+    }
+    call.answer(this.localStream!);
+    this.setupCallEvent(call);
+  }
+
+  private setupCallEvent(call: MediaConnection): void {
+    call.on('stream', (remoteStream) => {
+      this.remoteStream = remoteStream;
+      this.remoteVideo.nativeElement.srcObject = this.remoteStream;
+    });
+
+    call.on('close', () => {
+      this.endCall();
+    });
+
+    this.currentCall = call;
+  }
+
   endCall() {
+    if (this.currentCall) {
+      this.currentCall.close();
+    }
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
     }
@@ -84,5 +102,9 @@ private initializePeer() {
     }
     this.localVideo.nativeElement.srcObject = null;
     this.remoteVideo.nativeElement.srcObject = null;
+    this.localStream = null;
+    this.remoteStream = null;
+    this.navigationService.navigateToChatRoom(this.roomId);
+
   }
 }

@@ -19,22 +19,24 @@ export interface Message {
   providedIn: 'root'
 })
 export class ChatService {
+  constructor(private socket: SocketService) {}
 
-  constructor(
-    private socket: SocketService
-  ) {}
-
-  getSocket(): SocketService {
-    return this.socket;
+  connect() {
+    this.socket.connect();
   }
 
   sendMessage(message: Message) {
     this.socket.sendMessage(message);
   }
 
-  // When first joining a group chat, we have to obviously intiialize the messages first,
   getMessages(room_id: string): Observable<Message[]> {
-    return this.socket.onNewMessage().pipe(toArray());
+    return new Observable<Message[]>(observer => {
+      this.socket.getSocket().emit('get-initial-messages', room_id);
+      this.socket.getSocket().once('initial-messages', (messages: Message[]) => {
+        observer.next(messages);
+        observer.complete();
+      });
+    });
   }
 
 
@@ -82,10 +84,10 @@ export class ChatService {
 
 
   // This retrieves the group room participants within a group room.
-  getRoomMembers(roomId: string): Observable<string[]> { // array of group member's names
+  getRoomMembers(roomId: string): Observable<{ username: string; profile_pic: string }[]> { // array of group member's names
     return new Observable((observer) => {
       this.socket.getSocket().emit('get-room-members', roomId);
-      this.socket.getSocket().once('room-members', (participants: string[]) => {
+      this.socket.getSocket().once('room-members', (participants: { username: string; profile_pic: string }[]) => {
         observer.next(participants);
         observer.complete();
       });
@@ -104,11 +106,13 @@ export class ChatService {
 
 
   onNewMessage(): Observable<Message> {
-      return this.socket.onNewMessage();
+    return this.socket.onNewMessage();
+  }
+
+  getSocket(): SocketService {
+    return this.socket;
   }
 }
-
-
 
 
 

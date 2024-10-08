@@ -1,5 +1,23 @@
 <div class="admin-panel">
 
+    <!-- Pending Join Requests -->
+     <!--   -->
+    <div *ngIf="(isSuperAdmin || isGroupAdmin) && pendingRequests.length > 0" class="card">
+      <h3>Pending Join Requests</h3>
+      <ul class="request-list" >
+        <li *ngFor="let request of pendingRequests" class="request-item">
+          <div class="user-info">
+            <img [src]="request.profile_pic || './img/default_user.png'" alt="Avatar" class="user-avatar">
+            <span>{{ request.username }} wants to join {{ request.groupName }}</span>
+          </div>
+          <div class="button-container">
+            <button class="btn btn-approve" (click)="approveRequest(request)">Approve</button>
+            <button class="btn btn-reject" (click)="rejectRequest(request)">Reject</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+      
   <!-- Super Admin View -->
   <div *ngIf="isSuperAdmin" class="card">
     <h3>Super Admin Menu</h3>
@@ -9,9 +27,12 @@
     </div>
   </div>
 
+  
   <!-- Group Admin View -->
   <div *ngIf="isGroupAdmin && !isSuperAdmin" class="card">
     <h3>Your Admin Groups</h3>
+
+
     <ul class="group-list">
       <li *ngFor="let group of adminGroups" class="group-item">
         {{ group.name }}
@@ -24,6 +45,8 @@
   <div *ngIf="isSuperAdmin && showingUsers" class="card">
     <h3>Manage Users</h3>
     <ul class="user-list">
+      <button class="btn btn-add-user" (click)="showAddUserForm()">Add User</button>
+
       <li *ngFor="let user of users" class="user-item">
         <div class="user-info">
           <img [src]="user.profile_pic || 'img/default_user.png'" alt="Profile picture" class="user-avatar">
@@ -33,22 +56,60 @@
           </div>
         </div>
         <div class="user-actions">
-          <button class="btn btn-promote-group" (click)="promoteToGroupAdmin(user)">Promote to Group Admin</button>
+          <button class="btn btn-promote-group" (click)="showPromoteToGroupAdminForm(user)">Promote to Group Admin</button>
           <button class="btn btn-promote-super" (click)="promoteToSuperAdmin(user)">Promote to Super Admin</button>
           <button class="btn btn-remove-user" (click)="removeUser(user)">Remove User</button>
+        </div>
+
+        <!-- Group Admin -- Assign GroupID Form -->
+        <div *ngIf="showingGroupAdminForm && selectedUser === user" class="group-admin-form">
+          <input type="text" [(ngModel)]="groupIdOrName" placeholder="Enter Group ID or Name">
+          <button class="btn btn-confirm" (click)="confirmPromoteToGroupAdmin(user)">Confirm</button>
+          <button class="btn btn-cancel" (click)="cancelPromoteToGroupAdmin()">Cancel</button>
         </div>
       </li>
     </ul>
   </div>
 
+  <!-- Add New User Form -->
+  <div *ngIf="showingAddUserForm" class="card user-edit-panel">
+    <h3>Add New User</h3>
+    <form (ngSubmit)="addUser()">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" [(ngModel)]="newUser.username" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" [(ngModel)]="newUser.email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" [(ngModel)]="newUser.password" name="password" required>
+      </div>
+      <div class="form-group">
+        <label for="role">Role:</label>
+        <select id="role" [(ngModel)]="newUser.role" name="role" required>
+          <option value="user">User</option>
+          <option value="groupAdmin">Group Admin</option>
+          <option value="super">Super Admin</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-add">Add User</button>
+        <button type="button" class="btn btn-cancel" (click)="cancelAddUser()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
   <!-- Group Management Panel (for Super Admin) -->
   <div *ngIf="isSuperAdmin && showingGroups" class="card group-edit-panel">
     <h3>Manage All Groups</h3>
-    <button class="btn btn-add"  (click)="addGroup()">Add Group</button>
+    <button class="btn btn-add-group"  (click)="addGroup()">Add Group</button>
     <ul class="group-list">
       <li *ngFor="let group of groups" class="group-item">
         <span class="group-name">{{ group.name }}</span>
-        <div class="button-container">
+        <div class="group-actions">
           <button class="btn btn-edit" (click)="editGroup(group)">Edit</button>
           <button class="btn btn-remove" (click)="removeGroup(group)">Remove</button>
         </div>
@@ -70,9 +131,10 @@
         <li *ngFor="let chatroom of selectedGroup.chatrooms" class="chatroom-item">
 
           <span class="chatroom-name">{{ chatroom.chatRoomName }}</span>
-
-          <button type="button"  class="btn btn-edit"   (click)="editChatroom(chatroom)">  Edit</button>
-          <button type="button"  class="btn btn-remove" (click)="removeChatroom(chatroom)">Remove</button>
+          <div class="chatroom-actions">
+            <button  class="btn-edit"   (click)="editChatroom(chatroom)">  Edit</button>
+            <button  class="btn-remove" (click)="removeChatroom(chatroom)">Remove</button>
+          </div>
         </li>
       </ul>
       <button type="button"    class="btn btn-add"    (click)="addChatroom()">Add Chatroom</button>
