@@ -18,11 +18,9 @@
       <div class="settings-section">
 
         <!--        Birthdate    -->
-        <div class="setting-item">
-          <span>Birthdate</span>
-          <label class="date">
-            <input type="date" [(ngModel)]="user.birthdate" (change)="updateSetting('birthdate', user.birthdate)">
-          </label>
+        <div class="form-group">
+          <label for="birthdate">Birthdate:</label>
+          <input type="date" id="birthdate" [(ngModel)]="user.birthdate" name="birthdate">
         </div>
 
         <!--   Dark Mode   -->
