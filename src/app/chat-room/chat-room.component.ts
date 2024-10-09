@@ -28,7 +28,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   roomMembers: { username: string; profile_pic: string }[] = [];
 
   private messageSubscription: Subscription | undefined;
-  private messageErrorSubscription: Subscription | undefined;
+  private currentUser: User | null = null;
+  defaultAvatar: string = './img/default_user.png';
 
   // Constructor
   constructor(
@@ -70,6 +71,11 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     // ask from sockets
     this.listenForNewMessages();
     this.scrollToBottom();
+
+    // initialise who the user is so we dont have to keep fetching
+    this.authenticationService.getCurrentUser().subscribe(user => {
+      this.currentUser = user;
+    });
   }
 
 
@@ -151,37 +157,41 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
     if (!this.chatService.isConnected()) {
       console.error('Cannot send message: Socket not connected');
-
       console.log('Socket is not connected, reconnecting...');
       this.ensureSocketConnection();
     }
-    const currentUserId = this.authenticationService.getCurrentUserId();
-    if (!currentUserId) {
-      return console.error('User is not authenticated');
-    }
 
+    this.authenticationService.getCurrentUser().subscribe(
+      (currentUser) => {
+        if (!currentUser) {
+          return console.error('User is not authenticated');
+        }
 
-    try {
-      const message: Message = {
-        chatRoomId: this.chatRoomId,
-        senderId: {
-          username: currentUserId, // use id for now
-          profile_pic: '', // user.profile_pic
-        },
-        msgContent: this.newMessage,
-        timestamp: new Date(),
-        read: false
-      };
+        try {
+          const message: Message = {
+            chatRoomId: this.chatRoomId,
+            senderId: {
+              username: currentUser.username,
+              profile_pic: currentUser.profile_pic || this.defaultAvatar,
+            },
+            msgContent: this.newMessage,
+            timestamp: new Date(),
+            read: false
+          };
 
-      // Sends the message to the socket, which is placed into the MongoDB Server,
-      //  messages are added client-sided through listenForNewMessages()
-      this.chatService.sendMessage(message);
-      this.newMessage = ''; // reset input form
+          // Sends the message to the socket, which is placed into the MongoDB Server,
+          //  messages are added client-sided through listenForNewMessages()
+          this.chatService.sendMessage(message);
+          this.newMessage = ''; // reset input form
 
-    } catch (error) {
-      console.error('Error fetching current user details:', error);
-    }
-
+        } catch (error) {
+          console.error('Error sending message:', error);
+        }
+      },
+      (error) => {
+        console.error('Error fetching current user details:', error);
+      }
+    );
   }
 
   getChatRoomName(): void {
@@ -191,8 +201,10 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   }
 
 
-  isCurrentUser(userId: string): boolean {
-    return userId === this.authenticationService.getCurrentUserId();
+  isCurrentUser(username: string): boolean {
+    return this.currentUser && this.currentUser.username
+      ? this.currentUser.username.trim().toLowerCase() === username.trim().toLowerCase()
+      : false;
   }
 
   // For when we receive a new message, from socket.. scroll to the bottom inside the message container

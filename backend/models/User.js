@@ -36,7 +36,7 @@ const userSchema = new Schema({
     type:     Boolean,
     required: false, // not required by default
     default:  false
-  },  
+  },
 
   notifications: {
     type:     Boolean,
@@ -46,9 +46,10 @@ const userSchema = new Schema({
 
   // Roles & Groups
 
+  // user can be multiple authorities
   roles: [{
     type: String,
-    enum: ['super', 'groupAdmin', 'user'],  
+    enum: ['super', 'groupAdmin', 'user'],
   }],
 
   groups: [{

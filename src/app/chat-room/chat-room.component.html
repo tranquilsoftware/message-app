@@ -41,13 +41,30 @@
 
 
   <!--       Attempt at drawing messages on screen.. -->
-  <div class="chat-messages-container">
+  <!-- <div class="chat-messages-container">
     <div *ngFor="let message of messages"
          [ngClass]="{'message': true, 'sent': isCurrentUser(message.senderId.username), 'received': !isCurrentUser(message.senderId.username)}">
       <div class="message-content">{{ message.msgContent }}</div>
       <div *ngIf="settingsService.showTimestampOnMessages" class="message-timestamp">{{ formatTimestamp(message.timestamp) }}</div>
     </div>
+  </div> -->
+  <div class="chat-messages-container">
+    <div *ngFor="let message of messages" 
+         class="message-wrapper"
+         [ngClass]="{'current-user': isCurrentUser(message.senderId.username), 'other-user': !isCurrentUser(message.senderId.username)}">
+      <div class="message-avatar">
+        <img [src]="message.senderId.profile_pic || defaultAvatar" 
+             [alt]="message.senderId.username || 'User'"
+             (error)="message.senderId.profile_pic = defaultAvatar">
+      </div>
+      <div class="message-bubble">
+        <p class="message-sender">{{ message.senderId.username || 'User' }}</p>
+        <p class="message-text">{{ message.msgContent }}</p>
+        <p class="message-timestamp">{{ formatTimestamp(message.timestamp) }}</p>
+      </div>
+    </div>
   </div>
+  
 
 <!--  Message Input UI Form-->
   <div class="chat-input">

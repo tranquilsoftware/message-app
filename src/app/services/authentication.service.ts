@@ -64,7 +64,10 @@ export class AuthenticationService {
   private apiRegisterUserUrl = 'http://localhost:5000/api/register';
   public  apiUrl = 'http://localhost:5000/api/';
   private authStatusSubject = new BehaviorSubject<boolean>(this.isTokenValid());
-
+  private currentUserSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
+  public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
+  private lastFetchTime: number = 0;
+  private readonly fetchInterval: number = 60000; // 1 minute
 
   // current user data types
   private currentUserIdSubject: BehaviorSubject<string | null>;
@@ -296,24 +299,31 @@ export class AuthenticationService {
 
   // Retrieve the current user's ID
   getCurrentUser(): Observable<User | null> {
-    const token = this.getToken();
-    console.log('(getCurrentUser) - Token:', token);
-
-    if (!token) {
-      console.error('No token found, user is likely not authenticated!')
-      return throwError(() => new Error('User probably not authenticated')).pipe(
-        catchError(error => {
-          // error handling
-          console.error('Error:', error);
-          return of(null); // Return a default value or rethrow the error
-        })
-      );
+    const now = Date.now();
+    if (this.currentUserSubject.value && now - this.lastFetchTime < this.fetchInterval) {
+      return of(this.currentUserSubject.value);
     }
 
-    // Go to
+    const token = this.getToken();
+    if (!token) {
+      console.error('No token found, user is likely not authenticated!');
+      this.currentUserSubject.next(null);
+      return of(null);
+    }
+
     return this.http.get<User>(`${this.apiUrl}settings/current`, {
       headers: new HttpHeaders().set('Authorization', `Bearer ${token}`)
-    });
+    }).pipe(
+      tap(user => {
+        this.currentUserSubject.next(user);
+        this.lastFetchTime = now;
+      }),
+      catchError(error => {
+        console.error('Error fetching current user:', error);
+        this.currentUserSubject.next(null);
+        return of(null);
+      })
+    );
   }
 
   hasRole(role: string): Observable<boolean> {
