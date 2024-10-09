@@ -7,6 +7,11 @@ const ChatRoom = require("../models/ChatRoom");
 const multer = require('multer');
 const path = require('path');
 
+// Tell us we need a chatroomId to retrieve messages.
+router.get('/', (req, res) => {
+  res.status(400).json({ message: 'ChatRoom ID is required' });
+});
+
 // Endpoint to GET (load) messages for a specific chat room
 router.get('/:chatRoomId', async (req, res) => {
   try {
