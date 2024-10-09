@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import {Observable, toArray} from 'rxjs'
+import {Observable } from 'rxjs'
 import {SocketService} from "./socket.service";
-
+import { HttpClient } from '@angular/common/http';
 export interface Message {
   chatRoomId: string;
   senderId: {
@@ -9,24 +9,54 @@ export interface Message {
     profile_pic: string;
   };
   msgContent: string;
+  imageUrl?: string; // optional upload image
   timestamp: Date | string | number;
   read: boolean;
-
-
+  type?: 'text' | 'text-with-image';
 }
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  constructor(private socket: SocketService) {}
+  constructor(private socket: SocketService,
+    private http: HttpClient
+  ) {}
+  private apiUrl = 'http://localhost:5000/api';
+
 
   connect() {
     this.socket.connect();
   }
 
   sendMessage(message: Message) {
+    //old
     this.socket.sendMessage(message);
+
+    //new
+    // Check if the message contains an imageUrl
+    // return new Observable<void>(observer => {
+    //   try {
+    //     if (message.imageUrl) {
+    //       // If imageUrl exists, send a message with both text and image
+    //       this.socket.sendMessage({
+    //         ...message,
+    //         type: 'text-with-image'
+    //       });
+    //     } else {
+    //       // else, send a regular text message
+    //       this.socket.sendMessage({
+    //         ...message,
+    //         type: 'text'
+    //       });
+    //     }
+    //     observer.next();
+    //     observer.complete();
+    //    } catch (error) {
+    //       observer.error(error);
+    //     }
+    //   });
   }
 
   getMessages(room_id: string): Observable<Message[]> {
@@ -79,9 +109,13 @@ export class ChatService {
     this.socket.getSocket().emit('peer-id', peerId);
   }
 
+  // send message in chat
+  uploadImage(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
 
-// use in phase 2
-
+    return this.http.post(`${this.apiUrl}/messages/upload-image`, formData);
+  }
 
   // This retrieves the group room participants within a group room.
   getRoomMembers(roomId: string): Observable<{ username: string; profile_pic: string }[]> { // array of group member's names

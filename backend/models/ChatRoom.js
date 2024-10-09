@@ -22,6 +22,11 @@ const chatRoomSchema = new Schema({
     unique: true
   },
 
+  members: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  
   createdAt: {
     type: Date,
     default: Date.now

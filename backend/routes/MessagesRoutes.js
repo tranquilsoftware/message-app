@@ -3,6 +3,10 @@ const router = express.Router();
 const Message = require('../models/Message');
 const ChatRoom = require("../models/ChatRoom");
 
+// image uploads in chat room
+const multer = require('multer');
+const path = require('path');
+
 // Endpoint to GET (load) messages for a specific chat room
 router.get('/:chatRoomId', async (req, res) => {
   try {
@@ -41,5 +45,27 @@ router.post('/', async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+
+
+// Upload image to chatroom
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/user_uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname))
+  }
+});
+
+const upload = multer({ storage: storage });
+
+router.post('/upload-image', upload.single('image'), (req, res) => {
+  if (req.file) {
+    res.json({ imageUrl: `/user_uploads/${req.file.filename}` });
+  } else {
+    res.status(400).json({ error: 'No file uploaded' });
+  }
+});
+
 
 module.exports = router;

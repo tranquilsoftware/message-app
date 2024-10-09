@@ -94,9 +94,9 @@ app.use('/api/chatrooms', chatRoomRoutes);
 app.use('/api/users', usersRoutes);
 
 
-
 // Allow serving (GET requests) from users, to the following directories below.
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static('uploads'));
 
 
 
@@ -146,7 +146,7 @@ app.use((req, res, next) => {
 // const io = require('socket.io')(server, {
 //   pingTimeout: 5000, // 5 sec
 //   cors: {
-//     origin: "http://localhost:4200", // was 5000
+//     origin: "http://localhost:4200",
 //     methods: ["GET", "POST"],
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //     credentials: true
@@ -194,8 +194,10 @@ io.on('connection', (socket) => {
 
       msgContent: message_data.msgContent,
       timestamp:  new Date(message_data.timestamp),
+      imageUrl:   message_data.imageUrl,
       read:       message_data.read
     })
+
 
     new_message.save()
       .then((saved_message) => {
@@ -243,7 +245,7 @@ io.on('connection', (socket) => {
   // Handle request for room members
   socket.on('get-room-members', async (roomId) => {
     try {
-      const chatRoom = await ChatRoom.findOne({ chatRoomId: roomId }).populate('members');
+      const chatRoom = await ChatRoom.findOne({ chatRoomId: roomId }).populate('members', 'username profile_pic');
       if (chatRoom) {
         const members = chatRoom.members.map(member => ({
           username: member.username,

@@ -19,14 +19,22 @@ const messageSchema = new Schema({
 
   },
 
+  imageUrl: {
+    type: String,
+    // required: false
+    default: null
+  },
+
   msgContent: {
     type: String,
-    required: true,
+    required: false,
   },
+
   timestamp: {
     type: Date,
     default: Date.now,
   },
+
   read: {
     type: Boolean,
     default: false

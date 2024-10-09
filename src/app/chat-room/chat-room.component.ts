@@ -9,7 +9,7 @@ import {NavigationService} from "../services/navigation.service";
 import {SettingsService} from "../settings.service";
 import {DarkModeService} from "../services/dark-mode.service";
 import { ChangeDetectorRef } from '@angular/core'; // for updating a new message on chat room
-
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-chat-room',
@@ -30,6 +30,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   private messageSubscription: Subscription | undefined;
   private currentUser: User | null = null;
   defaultAvatar: string = './img/default_user.png';
+  private apiUrl = 'http://localhost:5000/api';
 
   // Constructor
   constructor(
@@ -38,7 +39,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     private navigationService: NavigationService,
     private chatService: ChatService,
     public authenticationService: AuthenticationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient
   ) {}
 
 
@@ -149,10 +151,10 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     );
   }
 
-
-  sendMessage(): void {
-    if (!this.newMessage.trim()) {
-      return console.log('Message is empty, not sending');
+  // maybe has a image path..
+  sendMessage(imagePath?: string) {
+    if (!this.newMessage.trim() && !imagePath) {
+      return;
     }
 
     if (!this.chatService.isConnected()) {
@@ -161,37 +163,33 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
       this.ensureSocketConnection();
     }
 
+
     this.authenticationService.getCurrentUser().subscribe(
-      (currentUser) => {
-        if (!currentUser) {
-          return console.error('User is not authenticated');
-        }
-
-        try {
-          const message: Message = {
-            chatRoomId: this.chatRoomId,
-            senderId: {
-              username: currentUser.username,
-              profile_pic: currentUser.profile_pic || this.defaultAvatar,
-            },
-            msgContent: this.newMessage,
-            timestamp: new Date(),
-            read: false
-          };
-
-          // Sends the message to the socket, which is placed into the MongoDB Server,
-          //  messages are added client-sided through listenForNewMessages()
-          this.chatService.sendMessage(message);
-          this.newMessage = ''; // reset input form
-
-        } catch (error) {
-          console.error('Error sending message:', error);
-        }
-      },
-      (error) => {
-        console.error('Error fetching current user details:', error);
+      currentUser => {
+        this.currentUser = currentUser;
       }
     );
+
+    if (!this.currentUser) {
+      console.error('User is not authenticated');
+      return;
+    }
+
+    const message: Message = {
+      chatRoomId: this.chatRoomId,
+      senderId: {
+        username: this.currentUser.username,
+        profile_pic: this.currentUser.profile_pic || this.defaultAvatar,
+      },
+      msgContent: this.newMessage,
+      imageUrl: imagePath || undefined,
+      timestamp: new Date(),
+      read: false
+    };
+
+    console.log('Sending message:', message);
+    this.chatService.sendMessage(message);
+    this.newMessage = ''; // reset input form
   }
 
   getChatRoomName(): void {
@@ -278,5 +276,57 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.showVideoChat = true;
   }
 
+  // upload image to server, then send to chat room.
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.chatService.uploadImage(file).subscribe({
+        next: (response) => {
+          console.log('Image uploaded successfully:', response);
+          this.sendMessage(response.imageUrl); // Pass the image URL to sendMessage
+        },
+        error: (error) => {
+          console.error('Error uploading image:', error);
+        }
+      });
+    }
+  }
+
+  uploadImage(file: File): void {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    this.http.post<{ imageUrl: string }>(`${this.apiUrl}/messages/upload-image`, formData).subscribe(
+      response => {
+        this.sendImageMessage(response.imageUrl);
+      },
+      error => {
+        console.error('Error uploading image:', error);
+      }
+    );
+  }
+
+  sendImageMessage(imageUrl: string): void {
+    const message: Message = {
+      chatRoomId: this.chatRoomId,
+      senderId: {
+        username: this.currentUser?.username || 'User',
+        profile_pic: this.currentUser?.profile_pic || this.defaultAvatar
+      },
+      msgContent: '',
+      imageUrl: imageUrl,
+      timestamp: new Date(),
+      read: false
+    };
+
+    this.chatService.sendMessage(message);
+    this.messages.push(message);
+    this.scrollToBottom();
+  }
+
+  onFileInputClick() {
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fileInput.click();
+  }
 }
 

@@ -116,6 +116,10 @@ body.dark-mode .bottom-nav {
   border-top: 1px solid #333;
 }
 
+body.dark-mode .chat-container {
+  background-color: #18191a;
+}
+
 body.dark-mode .user-item:hover,
 body.dark-mode .group-item:hover,
 body.dark-mode .chatroom-list li:hover {
