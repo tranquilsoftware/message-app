@@ -22,13 +22,6 @@ const chatRoomSchema = new Schema({
     unique: true
   },
 
-  // members is in group model.. not here..
-
-  // lastMessage: [{
-  //   type: Schema.Types.ObjectId,
-  //   // ref: 'Message' // Reference to the Message model A
-  // }],
-
   createdAt: {
     type: Date,
     default: Date.now
