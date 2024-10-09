@@ -9,11 +9,10 @@ const groupSchema = new Schema({
     default: () => Math.random().toString(36).substr(2, 9)
 
   },
-  
-  admins: [{ // TODO it should be here on second thought. currently on users. there is array adminInGroupIds.
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+
+  // Deprecated, our framework has adminInGroups for the User model ! :)
+  // admins: [{ // TODO it should be here on second thought. currently on users. there is array adminInGroupIds.
+
 
   name: {
     type: String,
@@ -23,12 +22,11 @@ const groupSchema = new Schema({
 
   chatrooms: [{
     type: Schema.Types.ObjectId,
-    // type: Number,
     required: false,
     ref: 'ChatRoom' // Reference to the ChatRoom model
   }],
 
-  members: [{  // Add this field
+  members: [{
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
