@@ -21,9 +21,7 @@ Storing a password in a text file would never take place in a production codebas
 - shows different chat items in bubbles (individuals or group chats)
 - navigation bar (dashboard, settings, logout)
 
-###
-
-Chat Room
+### Chat Room
 
 The main interface for real time message and video communication, between two people or a group.  
 Components:
@@ -49,15 +47,11 @@ A super user is a hardcoded user to be built into our framework. \[user: super, 
 
 ## Angular Services
 
-###
-
-Socket
+### Socket
 
 The Socket service provides us a service, that we can use within our framework to communicate using Socket.io. It declares signals that are used for communicating to our web server, to pass information over to another component or save certain information.
 
-###
-
-Authentication
+### Authentication
 
 The frameworks Authentication service is more comprehensive as opposed to our other services. As it is used quite often; to retrieve the current user information,
 
@@ -71,7 +65,7 @@ E.g. We should route to the dashboard after the login, only when the login crede
 
 This service provides an authorization header to the user’s outgoing HTTP requests. It is needed to authenticate users. It is written under _auth.interceptor.ts_, and we attach it within the _providers_ section of our AppModule (_app.module.ts_).
 
-Navigation  
+### Navigation  
 The Navigation service was made to easily, and correctly route the user to the right web page, without unnecessary lines of code. A DRY (Don’t-Repeat-Yourself) approach that was taken during development.
 
 It will also prompt the developer console of a successful route, or else a detailed error message.
